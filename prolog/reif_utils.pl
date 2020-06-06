@@ -3,6 +3,11 @@
                       , (#=<)/3
                       , (#>=)/3
                       , (==)/3 
+                      , op(700, xfx, #>)
+                      , op(700, xfx, #<)
+                      , op(700, xfx, #>=)
+                      , op(700, xfx, #=<)
+                      , op(700, xfx, ==)
                       ]).
 
 :- use_module(library(clpfd)).
