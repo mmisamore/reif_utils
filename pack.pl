@@ -1,6 +1,6 @@
 name(reif_utils).
 
-title("A collection of reified predicates for use with Ulrich Neumerkel's reif.pl").
+title('A collection of reified predicates for use with reif.pl').
 author('Michael D. Misamore', 'm.misamore@gmail.com').
 home('https://github.com/mmisamore/reif_utils').
 
