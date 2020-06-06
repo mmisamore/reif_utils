@@ -2,10 +2,10 @@ name(reif_utils).
 
 title("A collection of reified predicates for use with Ulrich Neumerkel's reif.pl").
 author('Michael D. Misamore', 'm.misamore@gmail.com').
-home('TBD').
+home('https://github.com/mmisamore/reif_utils').
 
 version('1.0.0').
-download('TBD').
+download('https://github.com/mmisamore/reif_utils/archive/1.0.0.zip').
 
 requires('clpfd').
 
