@@ -932,119 +932,66 @@ test('==_+_+_-_not_true', [ fail ]) :-
   Cond = true.
 
 % + - +
-test('==_+_-_+_true') :-
-  ==(abc, Y, true),
-  abc == Y.
-
-test('==_+_-_+_not_false', [ fail ]) :-
-  ==(abc, Y, false),
-  abc == Y. 
-
 test('==_+_-_+_false') :-
-  ==(abc, Y, false),
-  abc \== Y. 
+  ==(abc, _, false).
 
 test('==_+_-_+_not_true', [ fail ]) :-
-  ==(abc, Y, true),
-  abc \== Y.
+  ==(abc, _, true).
 
 % + - -
-test('==_+_-_-_true') :-
-  % Query order forces choice point
-  findall(Y, ( ==(abc, Y, Cond), Cond = true ), Ans),
-  Ans = [Z],
-  abc == Z.
-
-test('==_+_-_-_not_false', [ fail ]) :-
-  ==(abc, Y, Cond),
-  Cond = false,
-  abc == Y. 
-
 test('==_+_-_-_false') :-
-  ==(abc, Y, Cond),
-  Cond = false,
-  abc \== Y. 
+  ==(abc, _, Cond),
+  Cond = false.
 
 test('==_+_-_-_not_true', [ fail ]) :-
-  ==(abc, Y, Cond),
-  Cond = true,
-  abc \== Y.
+  ==(abc, _, Cond),  
+  Cond = true.
 
 % - + +
-test('==_-_+_+_true') :-
-  ==(X, def, true),
-  X == def.
-
-test('==_-_+_+_not_false', [ fail ]) :-
-  ==(X, def, false),
-  X == def.
-
 test('==_-_+_+_false') :-
-  ==(X, def, false),
-  X \== def. 
+  ==(_, def, false).
 
 test('==_-_+_+_not_true', [ fail ]) :-
-  ==(X, def, true),
-  X \== def.
+  ==(_, def, true).
 
 % - + -
-test('==_-_+_-_true') :-
-  findall(X, ( ==(X, def, Cond), Cond = true ), Ans),
-  Ans = [Z],
-  Z == def.
-
-test('==_-_+_-_not_false', [ fail ]) :-
-  ==(X, def, Cond),
-  Cond = false,
-  X == def.
-
 test('==_-_+_-_false') :-
-  ==(X, def, Cond),
-  Cond = false,
-  X \== def. 
+  ==(_, def, Cond),
+  Cond = false.
 
 test('==_-_+_-_not_true', [ fail ]) :-
-  ==(X, def, Cond),
-  Cond = true,
-  X \== def.
+  ==(_, def, Cond),
+  Cond = true.
 
 % - - +
-test('==_-_-_+_true') :-
-  ==(X, Y, true),
-  X == Y.
-
-test('==_-_-_+_not_false', [ fail ]) :-
-  ==(X, Y, false),
-  X == Y.
-
 test('==_-_-_+_false') :-
-  ==(X, Y, false),
-  X \== Y. 
+  ==(_, _, false).
 
 test('==_-_-_+_not_true', [ fail ]) :-
-  ==(X, Y, true),
-  X \== Y.
+  ==(_, _, true).
+
+test('==_-_-_+_true') :-
+  ==(X, X, true).
+
+test('==_-_-_+_not_false', [ fail ]) :-
+  ==(X, X, false).
 
 % - - -
-test('==_-_-_-_true') :-
-  findall(X-Y, ( ==(X, Y, Cond), Cond = true ), Ans),
-  Ans = [X-Y],
-  X == Y.
-
-test('==_-_-_-_not_false', [ fail ]) :-
-  ==(X, Y, Cond),
-  Cond = false,
-  X == Y.
-
 test('==_-_-_-_false') :-
-  ==(X, Y, Cond),
-  Cond = false,
-  X \== Y. 
+  ==(_, _, Cond),
+  Cond = false.
 
 test('==_-_-_-_not_true', [ fail ]) :-
-  ==(X, Y, Cond),
-  Cond = true,
-  X \== Y.
+  ==(_, _, Cond),
+  Cond = true.
+
+test('==_-_-_-_true') :-
+  ==(X, X, Cond),
+  Cond = true.
+
+test('==_-_-_-_not_false', [ fail ]) :-
+  ==(X, X, Cond),
+  Cond = false.
 
 :- end_tests(reif_utils).
 
