@@ -993,5 +993,100 @@ test('==_-_-_-_not_false', [ fail ]) :-
   ==(X, X, Cond),
   Cond = false.
 
+
+% Tests for @<
+
+% + + +
+test('@<_+_+_+_true') :-
+  @<(a, b, true).
+
+test('@<_+_+_+_not_false', [ fail ]) :-
+  @<(a, b, false).
+
+test('@<_+_+_+_false') :-
+  @<(b, a, false).
+
+test('@<_+_+_+_not_true', [ fail ]) :-
+  @<(b, a, true).
+
+test('@<_+_+_+_eq_false') :-
+  @<(a, a, false).
+
+test('@<_+_+_+_eq_not_true', [ fail ]) :-
+  @<(a, a, true).
+
+% + + -
+test('@<_+_+_-_true') :-
+  @<(a, b, X),
+  X = true.
+
+test('@<_+_+_-_not_false', [ fail ]) :-
+  @<(a, b, X),
+  X = false.
+
+test('@<_+_+_-_false') :-
+  @<(b, a, X),
+  X = false.
+
+test('@<_+_+_-_not_true', [ fail ]) :-
+  @<(b, a, X),
+  X = true.
+
+test('@<_+_+_-_eq_false') :-
+  @<(a, a, X),
+  X = false.
+
+test('@<_+_+_-_eq_not_true', [ fail ]) :-
+  @<(a, a, X),
+  X = true.
+
+% + - +
+test('@<_+_-_+_false') :-
+  @<(a, _, false).
+
+test('@<_+_-_+_not_true', [ fail ]) :-
+  @<(a, _, true).
+
+% + - -
+test('@<_+_-_-_false') :-
+  @<(a, _, Cond),
+  Cond = false.
+
+test('@<_+_-_-_not_true', [ fail ]) :-
+  @<(a, _, Cond),
+  Cond = true.
+
+% - + +
+test('@<_-_+_+_true') :-
+  @<(_, b, true).
+
+test('@<_-_+_+_not_false', [ fail ]) :-
+  @<(_, b, false).
+
+% - + -
+test('@<_-_+_-_true') :-
+  @<(_, b, Cond),
+  Cond = true.
+
+test('@<_-_+_-_not_false', [ fail ]) :-
+  @<(_, b, Cond),
+  Cond = false.
+
+% - - +
+test('@<_-_-_+_true') :-
+  @<(_, _, true).
+
+test('@<_-_-_+_not_false', [ fail ]) :-
+  @<(_, _, false).
+
+% - - -
+test('@<_-_-_-_true') :-
+  @<(_, _, Cond),
+  Cond = true.
+
+test('@<_-_-_-_not_false', [ fail ]) :-
+  @<(_, _, Cond),
+  Cond = false.
+
 :- end_tests(reif_utils).
 
