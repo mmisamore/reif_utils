@@ -4,12 +4,14 @@
                       , (#>=)/3
                       , (==)/3 
                       , (@<)/3
+                      , (@=<)/3
                       , op(700, xfx, #>)
                       , op(700, xfx, #<)
                       , op(700, xfx, #>=)
                       , op(700, xfx, #=<)
                       , op(700, xfx, ==)
                       , op(700, xfx, @<)
+                      , op(700, xfx, @=<)
                       ]).
 
 :- use_module(library(clpfd)).
@@ -87,9 +89,9 @@ bool_rep(false, 0).
 %! ==(-X, -Y, +Cond:boolean) is semidet.
 %! ==(-X, -Y, -Cond:boolean) is det.
 %
-% Reified (dis)equivalence: this predicate is true whenever 1) X == Y and Cond is true or 
+% Reified term (dis)equivalence: this predicate is true whenever 1) X == Y and Cond is true or 
 % 2) X \== Y and Cond is false. All modes are supported; intended to have zero unnecessary
-% choice points.
+% choice points. 
 ==(X, Y, Cond) :- 
   (  var(Cond)
   -> ( X == Y -> Cond = true ; Cond = false )
@@ -108,11 +110,30 @@ bool_rep(false, 0).
 %
 % Reified term comparison: this predicate is true whenever 1) X @< Y and Cond is true or 
 % 2) X @>= Y and Cond is false. All modes are supported; intended to have zero unnecessary
-% choice points.
+% choice points. 
 @<(X, Y, Cond) :-
   (  var(Cond)
   -> ( X @< Y -> Cond = true ; Cond = false )
   ;  ground(Cond)
   -> ( Cond = true -> X @< Y ; Cond = false -> X @>= Y )
+  ).
+
+%! @=<(+X, +Y, +Cond:boolean) is semidet.
+%! @=<(+X, +Y, -Cond:boolean) is det.
+%! @=<(+X, -Y, +Cond:boolean) is semidet.
+%! @=<(+X, -Y, -Cond:boolean) is det.
+%! @=<(-X, +Y, +Cond:boolean) is semidet.
+%! @=<(-X, +Y, -Cond:boolean) is det.
+%! @=<(-X, -Y, +Cond:boolean) is semidet.
+%! @=<(-X, -Y, -Cond:boolean) is det.
+%
+% Reified term comparison: this predicate is true whenever 1) X @=< Y and Cond is true or 
+% 2) X @> Y and Cond is false. All modes are supported; intended to have zero unnecessary
+% choice points. 
+@=<(X, Y, Cond) :-
+  (  var(Cond)
+  -> ( X @=< Y -> Cond = true ; Cond = false )
+  ;  ground(Cond)
+  -> ( Cond = true -> X @=< Y ; Cond = false -> X @> Y )
   ).
 
