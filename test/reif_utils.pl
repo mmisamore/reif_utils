@@ -994,6 +994,101 @@ test('==_-_-_-_not_false', [ fail ]) :-
   Cond = false.
 
 
+% Tests for \==
+
+% + + +
+test('\\==_+_+_+_false') :-
+  \==(abc, abc, false).
+
+test('\\==_+_+_+_not_true', [ fail ]) :-
+  \==(abc, abc, true).
+
+test('\\==_+_+_+_true') :-
+  \==(abc, def, true).
+
+test('\\==_+_+_+_not_false', [ fail ]) :-
+  \==(abc, def, false).
+
+% + + -
+test('\\==_+_+_-_false') :-
+  \==(abc, abc, Cond),
+  Cond = false.
+
+test('\\==_+_+_-_not_true', [ fail ]) :-
+  \==(abc, abc, Cond),
+  Cond = true.
+
+test('\\==_+_+_-_true') :-
+  \==(abc, def, Cond),
+  Cond = true.
+
+test('\\==_+_+_-_not_false', [ fail ]) :-
+  \==(abc, def, Cond),
+  Cond = false.
+
+% + - +
+test('\\==_+_-_+_true') :-
+  \==(abc, _, true).
+
+test('\\==_+_-_+_not_false', [ fail ]) :-
+  \==(abc, _, false).
+
+% + - -
+test('\\==_+_-_-_true') :-
+  \==(abc, _, Cond),
+  Cond = true.
+
+test('\\==_+_-_-_not_false', [ fail ]) :-
+  \==(abc, _, Cond),  
+  Cond = false.
+
+% - + +
+test('\\==_-_+_+_true') :-
+  \==(_, def, true).
+
+test('\\==_-_+_+_not_false', [ fail ]) :-
+  \==(_, def, false).
+
+% - + -
+test('\\==_-_+_-_true') :-
+  \==(_, def, Cond),
+  Cond = true.
+
+test('\\==_-_+_-_not_false', [ fail ]) :-
+  \==(_, def, Cond),
+  Cond = false.
+
+% - - +
+test('\\==_-_-_+_true') :-
+  \==(_, _, true).
+
+test('\\==_-_-_+_not_false', [ fail ]) :-
+  \==(_, _, false).
+
+test('\\==_-_-_+_false') :-
+  \==(X, X, false).
+
+test('\\==_-_-_+_not_true', [ fail ]) :-
+  \==(X, X, true).
+
+% - - -
+test('\\==_-_-_-_true') :-
+  \==(_, _, Cond),
+  Cond = true.
+
+test('\\==_-_-_-_not_false', [ fail ]) :-
+  \==(_, _, Cond),
+  Cond = false.
+
+test('\\==_-_-_-_false') :-
+  \==(X, X, Cond),
+  Cond = false.
+
+test('\\==_-_-_-_not_true', [ fail ]) :-
+  \==(X, X, Cond),
+  Cond = true.
+
+
 % Tests for @<
 
 % + + +

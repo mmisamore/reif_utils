@@ -1,18 +1,21 @@
-:- module(reif_utils, [ (#<)/3 
-                      , (#>)/3 
-                      , (#=<)/3
-                      , (#>=)/3
-                      , (==)/3 
-                      , (@<)/3
-                      , (@=<)/3
-                      , op(700, xfx, #>)
-                      , op(700, xfx, #<)
-                      , op(700, xfx, #>=)
-                      , op(700, xfx, #=<)
-                      , op(700, xfx, ==)
-                      , op(700, xfx, @<)
-                      , op(700, xfx, @=<)
-                      ]).
+:- module(reif_utils,
+  [ (#<)/3
+  , (#>)/3
+  , (#=<)/3
+  , (#>=)/3
+  , (==)/3
+  , (\==)/3
+  , (@<)/3
+  , (@=<)/3
+  , op(700, xfx, #>)
+  , op(700, xfx, #<)
+  , op(700, xfx, #>=)
+  , op(700, xfx, #=<)
+  , op(700, xfx, ==)
+  , op(700, xfx, \==)
+  , op(700, xfx, @<)
+  , op(700, xfx, @=<)
+]).
 
 :- use_module(library(clpfd)).
 
@@ -91,12 +94,31 @@ bool_rep(false, 0).
 %
 % Reified term (dis)equivalence: this predicate is true whenever 1) X == Y and Cond is true or 
 % 2) X \== Y and Cond is false. All modes are supported; intended to have zero unnecessary
-% choice points. 
-==(X, Y, Cond) :- 
+% choice points.
+==(X, Y, Cond) :-
   (  var(Cond)
   -> ( X == Y -> Cond = true ; Cond = false )
   ;  ground(Cond)
   -> ( Cond = true -> X == Y ; Cond = false -> X \== Y)
+  ).
+
+%! \==(+X, +Y, +Cond:boolean) is semidet.
+%! \==(+X, +Y, -Cond:boolean) is det.
+%! \==(+X, -Y, +Cond:boolean) is semidet.
+%! \==(+X, -Y, -Cond:boolean) is det.
+%! \==(-X, +Y, +Cond:boolean) is semidet.
+%! \==(-X, +Y, -Cond:boolean) is det.
+%! \==(-X, -Y, +Cond:boolean) is semidet.
+%! \==(-X, -Y, -Cond:boolean) is det.
+%
+% Reified term (dis)equivalence: this predicate is true whenever 1) X \== Y and Cond is true or 
+% 2) X == Y and Cond is false. All modes are supported; intended to have zero unnecessary
+% choice points.
+\==(X, Y, Cond) :-
+  (  var(Cond)
+  -> ( X \== Y -> Cond = true ; Cond = false )
+  ;  ground(Cond)
+  -> ( Cond = true -> X \== Y ; Cond = false -> X == Y)
   ).
 
 %! @<(+X, +Y, +Cond:boolean) is semidet.
