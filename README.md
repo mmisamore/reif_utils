@@ -5,9 +5,10 @@ This module collects a variety of utility predicates intended for use with Ulric
 for background. It is intended for use with SWI Prolog; please see LICENSE for terms of use.
 
 The implementations provided here fall into the following groups:
-* Reified integer comparison predicates (leveraging Markus Triska's excellent `clpfd` library 
+* Pure, reified integer comparison predicates (leveraging Markus Triska's excellent `clpfd` library 
   for SWI Prolog) 
-* Reified term (dis)equivalence and ordering predicates 
+* Impure, reified term equivalence and term-ordering predicates 
+* Pure, reified term-ordering predicates
 
 The real value provided here is in the tests: every provided predicate is implemented and tested 
 in all possible computable modes, with the goal of eliminating all unnecessary choice points.

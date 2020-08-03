@@ -1469,5 +1469,215 @@ test('@>=_-_-_-_not_true', [ fail ]) :-
   Cond = true.
 
 
+% Tests for $<
+
+% + + +
+test('$<_+_+_+_true') :-
+  $<(a, b, true).
+
+test('$<_+_+_+_not_false', [ fail ]) :-
+  $<(a, b, false).
+
+test('$<_+_+_+_false') :-
+  $<(b, a, false).
+
+test('$<_+_+_+_not_true', [ fail ]) :-
+  $<(b, a, true).
+
+test('$<_+_+_+_eq_false') :-
+  $<(a, a, false).
+
+test('$<_+_+_+_eq_not_true', [ fail ]) :-
+  $<(a, a, true).
+
+% + + -
+test('$<_+_+_-_true') :-
+  $<(a, b, Cond),
+  Cond = true.
+
+test('$<_+_+_-_not_false', [ fail ]) :-
+  $<(a, b, Cond),
+  Cond = false.
+
+test('$<_+_+_-_false') :-
+  $<(b, a, Cond),
+  Cond = false.
+
+test('$<_+_+_-_not_true', [ fail ]) :-
+  $<(b, a, Cond),
+  Cond = true.
+
+test('$<_+_+_-_eq_false') :-
+  $<(a, a, Cond),
+  Cond = false.
+
+test('$<_+_+_-_eq_not_true', [ fail ]) :-
+  $<(a, a, Cond),
+  Cond = true.
+
+% + - +
+test('$<_+_-_+_true') :-
+  $<(a, Y, true),
+  Y = b.
+
+test('$<_+_-_+_not_false', [ fail ]) :-
+  $<(a, Y, false),
+  Y = b.
+
+test('$<_+_-_+_false') :-
+  $<(b, Y, false),
+  Y = a.
+
+test('$<_+_-_+_not_true', [ fail ]) :-
+  $<(b, Y, true),
+  Y = a.
+
+test('$<_+_-_+_eq_false') :-
+  $<(a, Y, false),
+  Y = a.
+
+test('$<_+_-_+_eq_not_true', [ fail ]) :-
+  $<(a, Y, true),
+  Y = a.
+
+% + - -
+test('$<_+_-_-_true') :-
+  $<(a, Y, Cond),
+  Y = b,
+  Cond = true.
+
+test('$<_+_-_-_not_false', [ fail ]) :-
+  $<(a, Y, Cond),
+  Y = b,
+  Cond = false.
+
+test('$<_+_-_-_false') :-
+  $<(b, Y, Cond),
+  Y = a,
+  Cond = false.
+
+test('$<_+_-_-_not_true', [ fail ]) :-
+  $<(b, Y, Cond),
+  Y = a,
+  Cond = true.
+
+test('$<_+_-_-_eq_false') :-
+  $<(a, Y, Cond),
+  Y = a,
+  Cond = false.
+
+test('$<_+_-_-_eq_not_true', [ fail ]) :-
+  $<(a, Y, Cond),
+  Y = a,
+  Cond = true.
+
+% - + +
+test('$<_-_+_+_true') :-
+  $<(X, b, true),
+  X = a.
+
+test('$<_-_+_+_not_false', [ fail ]) :-
+  $<(X, b, false),
+  X = a.
+
+test('$<_-_+_+_false') :-
+  $<(X, a, false),
+  X = b.
+
+test('$<_-_+_+_not_true', [ fail ]) :-
+  $<(X, a, true),
+  X = b.
+
+test('$<_-_+_+_eq_false') :-
+  $<(X, a, false),
+  X = a.
+
+test('$<_-_+_+_eq_not_true', [ fail ]) :-
+  $<(X, a, true),
+  X = a.
+
+% - + -
+test('$<_-_+_-_true') :-
+  $<(X, b, Cond),
+  X = a,
+  Cond = true.
+
+test('$<_-_+_-_not_false', [ fail ]) :-
+  $<(X, b, Cond),
+  X = a,
+  Cond = false.
+
+test('$<_-_+_-_false') :-
+  $<(X, a, Cond),
+  X = b,
+  Cond = false.
+
+test('$<_-_+_-_not_true', [ fail ]) :-
+  $<(X, a, Cond),
+  X = b,
+  Cond = true.
+
+test('$<_-_+_-_eq_false') :-
+  $<(X, a, Cond),
+  X = a,
+  Cond = false.
+
+test('$<_-_+_-_eq_not_true', [ fail ]) :-
+  $<(X, a, Cond),
+  X = a,
+  Cond = true.
+
+% - - +
+test('$<_-_-_+_true') :-
+  $<(X, Y, true),
+  X = a, Y = b. 
+
+test('$<_-_-_+_not_false', [ fail ]) :-
+  $<(X, Y, false),
+  X = a, Y = b. 
+
+test('$<_-_-_+_false') :-
+  $<(X, Y, false),
+  X = b, Y = a.
+
+test('$<_-_-_+_not_true', [ fail ]) :-
+  $<(X, Y, true),
+  X = b, Y = a.
+
+test('$<_-_-_+_eq_false') :-
+  $<(X, X, false).
+
+test('$<_-_-_+_eq_not_true', [ fail ]) :-
+  $<(X, X, true).
+
+% - - -
+test('$<_-_-_-_true') :-
+  $<(X, Y, Cond),
+  X = a, Y = b, 
+  Cond = true.
+
+test('$<_-_-_-_not_false', [ fail ]) :-
+  $<(X, Y, Cond),
+  X = a, Y = b, 
+  Cond = false.
+
+test('$<_-_-_-_false') :-
+  $<(X, Y, Cond),
+  X = b, Y = a,
+  Cond = false.
+
+test('$<_-_-_-_not_true', [ fail ]) :-
+  $<(X, Y, Cond),
+  X = b, Y = a,
+  Cond = true.
+
+test('$<_-_-_-_eq_false') :-
+  $<(X, X, Cond),
+  Cond = false.
+
+test('$<_-_-_-_eq_not_true', [ fail ]) :-
+  $<(X, X, Cond),
+  Cond = true.
+
 :- end_tests(reif_utils).
 
