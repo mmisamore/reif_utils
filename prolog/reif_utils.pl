@@ -7,6 +7,8 @@
   , (\==)/3
   , (@<)/3
   , (@=<)/3
+  , (@>)/3
+  , (@>=)/3
   , op(700, xfx, #>)
   , op(700, xfx, #<)
   , op(700, xfx, #>=)
@@ -15,6 +17,8 @@
   , op(700, xfx, \==)
   , op(700, xfx, @<)
   , op(700, xfx, @=<)
+  , op(700, xfx, @>)
+  , op(700, xfx, @>=)
 ]).
 
 :- use_module(library(clpfd)).
@@ -94,7 +98,8 @@ bool_rep(false, 0).
 %
 % Reified term (dis)equivalence: this predicate is true whenever 1) X == Y and Cond is true or 
 % 2) X \== Y and Cond is false. All modes are supported; intended to have zero unnecessary
-% choice points.
+% choice points. This predicate is not steadfast: `==(X, Y, false), X = a, Y = a` is true 
+% with solution `X = a, Y = a` but `==(a, a, false)` is false.
 ==(X, Y, Cond) :-
   (  var(Cond)
   -> ( X == Y -> Cond = true ; Cond = false )
@@ -113,7 +118,8 @@ bool_rep(false, 0).
 %
 % Reified term (dis)equivalence: this predicate is true whenever 1) X \== Y and Cond is true or 
 % 2) X == Y and Cond is false. All modes are supported; intended to have zero unnecessary
-% choice points.
+% choice points. This predicate is not steadfast: `\==(X, Y, true), X = a, Y = a` is true 
+% with solution `X = a, Y = a` but `\==(a, a, true)` is false.
 \==(X, Y, Cond) :-
   (  var(Cond)
   -> ( X \== Y -> Cond = true ; Cond = false )
@@ -132,7 +138,8 @@ bool_rep(false, 0).
 %
 % Reified term comparison: this predicate is true whenever 1) X @< Y and Cond is true or 
 % 2) X @>= Y and Cond is false. All modes are supported; intended to have zero unnecessary
-% choice points. 
+% choice points. This predicate is not steadfast: `@<(X, Y, true), X = b, Y = a` is true 
+% with solution `X = b, Y = a` but `@<(b, a, true)` is false.
 @<(X, Y, Cond) :-
   (  var(Cond)
   -> ( X @< Y -> Cond = true ; Cond = false )
@@ -151,11 +158,52 @@ bool_rep(false, 0).
 %
 % Reified term comparison: this predicate is true whenever 1) X @=< Y and Cond is true or 
 % 2) X @> Y and Cond is false. All modes are supported; intended to have zero unnecessary
-% choice points. 
+% choice points.  This predicate is not steadfast: `@=<(X, Y, true), X = b, Y = a` is true 
+% with solution `X = b, Y = a` but `@=<(b, a, true)` is false.
 @=<(X, Y, Cond) :-
   (  var(Cond)
   -> ( X @=< Y -> Cond = true ; Cond = false )
   ;  ground(Cond)
   -> ( Cond = true -> X @=< Y ; Cond = false -> X @> Y )
+  ).
+
+%! @>(+X, +Y, +Cond:boolean) is semidet.
+%! @>(+X, +Y, -Cond:boolean) is det.
+%! @>(+X, -Y, +Cond:boolean) is semidet.
+%! @>(+X, -Y, -Cond:boolean) is det.
+%! @>(-X, +Y, +Cond:boolean) is semidet.
+%! @>(-X, +Y, -Cond:boolean) is det.
+%! @>(-X, -Y, +Cond:boolean) is semidet.
+%! @>(-X, -Y, -Cond:boolean) is det.
+%
+% Reified term comparison: this predicate is true whenever 1) X @> Y and Cond is true or 
+% 2) X @=< Y and Cond is false. All modes are supported; intended to have zero unnecessary
+% choice points. This predicate is not steadfast: `@>(X, Y, false), X = b, Y = a` is true
+% with solution `X = b, Y = a` but `@>(b, a, false)` is false.
+@>(X, Y, Cond) :-
+  (  var(Cond)
+  -> ( X @> Y -> Cond = true ; Cond = false )
+  ;  ground(Cond)
+  -> ( Cond = true -> X @> Y ; Cond = false -> X @=< Y )
+  ).
+
+%! @>=(+X, +Y, +Cond:boolean) is semidet.
+%! @>=(+X, +Y, -Cond:boolean) is det.
+%! @>=(+X, -Y, +Cond:boolean) is semidet.
+%! @>=(+X, -Y, -Cond:boolean) is det.
+%! @>=(-X, +Y, +Cond:boolean) is semidet.
+%! @>=(-X, +Y, -Cond:boolean) is det.
+%! @>=(-X, -Y, +Cond:boolean) is semidet.
+%! @>=(-X, -Y, -Cond:boolean) is det.
+%
+% Reified term comparison: this predicate is true whenever 1) X @>= Y and Cond is true or 
+% 2) X @< Y and Cond is false. All modes are supported; intended to have zero unnecessary
+% choice points. This predicate is not steadfast: `@>=(X, Y, false), X = b, Y = a` is true
+% with solution `X = b, Y = a` but `@>=(b, a, false)` is false.
+@>=(X, Y, Cond) :-
+  (  var(Cond)
+  -> ( X @>= Y -> Cond = true ; Cond = false )
+  ;  ground(Cond)
+  -> ( Cond = true -> X @>= Y ; Cond = false -> X @< Y )
   ).
 
