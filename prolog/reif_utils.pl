@@ -232,14 +232,14 @@ $<(X, Y, Cond) :-
   -> ( Cond = true -> when(?=(X, Y), X @< Y) ; Cond = false -> when(?=(X, Y), X @>= Y) )
   ).
 
-%! $<(+X, +Y, +Cond:boolean) is semidet.
-%! $<(+X, +Y, -Cond:boolean) is det.
-%! $<(+X, -Y, +Cond:boolean) is det.
-%! $<(+X, -Y, -Cond:boolean) is det.
-%! $<(-X, +Y, +Cond:boolean) is det.
-%! $<(-X, +Y, -Cond:boolean) is det.
-%! $<(-X, -Y, +Cond:boolean) is det.
-%! $<(-X, -Y, -Cond:boolean) is det.
+%! $=<(+X, +Y, +Cond:boolean) is semidet.
+%! $=<(+X, +Y, -Cond:boolean) is det.
+%! $=<(+X, -Y, +Cond:boolean) is det.
+%! $=<(+X, -Y, -Cond:boolean) is det.
+%! $=<(-X, +Y, +Cond:boolean) is det.
+%! $=<(-X, +Y, -Cond:boolean) is det.
+%! $=<(-X, -Y, +Cond:boolean) is det.
+%! $=<(-X, -Y, -Cond:boolean) is det.
 %
 % Pure reified term comparison: this predicate is true whenever 1) X @=< Y upon sufficient
 % instantiation of both variables and Cond is true or 2) X @> Y upon sufficient instantiation
