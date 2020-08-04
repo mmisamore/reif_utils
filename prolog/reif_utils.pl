@@ -12,6 +12,7 @@
   , ($<)/3
   , ($=<)/3
   , ($>)/3
+  , ($>=)/3
   , op(700, xfx, #>)
   , op(700, xfx, #<)
   , op(700, xfx, #>=)
@@ -25,6 +26,7 @@
   , op(700, xfx, $<)
   , op(700, xfx, $=<)
   , op(700, xfx, $>)
+  , op(700, xfx, $>=)
   ]).
 
 :- use_module(library(clpfd)).
@@ -274,5 +276,26 @@ $>(X, Y, Cond) :-
   -> when(?=(X, Y), ( X @> Y -> Cond = true ; Cond = false ) )
   ;  ground(Cond)
   -> ( Cond = true -> when(?=(X, Y), X @> Y) ; Cond = false -> when(?=(X, Y), X @=< Y) )
+  ).
+
+%! $>=(+X, +Y, +Cond:boolean) is semidet.
+%! $>=(+X, +Y, -Cond:boolean) is det.
+%! $>=(+X, -Y, +Cond:boolean) is det.
+%! $>=(+X, -Y, -Cond:boolean) is det.
+%! $>=(-X, +Y, +Cond:boolean) is det.
+%! $>=(-X, +Y, -Cond:boolean) is det.
+%! $>=(-X, -Y, +Cond:boolean) is det.
+%! $>=(-X, -Y, -Cond:boolean) is det.
+%
+% Pure reified term comparison: this predicate is true whenever 1) X @>= Y upon sufficient
+% instantiation of both variables and Cond is true or 2) X @< Y upon sufficient instantiation
+% of both variables and Cond is false. All modes are supported; intended to have zero unnecessary
+% choice points. This predicate guarantees referential transparency by delaying evaluation where
+% necessary.
+$>=(X, Y, Cond) :-
+  (  var(Cond)
+  -> when(?=(X, Y), ( X @>= Y -> Cond = true ; Cond = false ) )
+  ;  ground(Cond)
+  -> ( Cond = true -> when(?=(X, Y), X @>= Y) ; Cond = false -> when(?=(X, Y), X @< Y) )
   ).
 
