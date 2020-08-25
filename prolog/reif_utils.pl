@@ -9,6 +9,16 @@
   , (@=<)/3
   , (@>)/3
   , (@>=)/3
+  , term_indomain/2
+  , is_term/1
+  , term_normalized/2
+  , dom_normalized/2
+  , term_at_least/2
+  , term_at_most/2
+  , terms_from_from_intersection/3
+  , terms_to_to_intersection/3
+  , terms_from_to_intersection/3
+  , terms_from_int_intersection/3
   , ($<)/3
   , ($=<)/3
   , ($>)/3
@@ -298,4 +308,215 @@ $>=(X, Y, Cond) :-
   ;  ground(Cond)
   -> ( Cond = true -> when(?=(X, Y), X @>= Y) ; Cond = false -> when(?=(X, Y), X @< Y) )
   ).
+
+
+% Setup an interval theory for the standard total ordering on terms. The theory consists 
+% of the following subset types:
+%
+% `all_terms` represents the subset of all terms
+% `terms_from(X)` represents the half interval `[X, sup]`
+% `terms_to(Y)` represents the half interval `[inf, Y]`
+% `[X]` represents a singleton set 
+% `[X, Y]` represents a closed interval `[X, Y]`
+%
+% The domain theory permits known-constant interval endpoints of the form `const(-)` as 
+% well as variable endpoints of the form `variable(-)`. Domain intersections with 
+% variable endpoints are non-deterministic.
+
+% term_indomain(-Term, +Dom) is det.
+%
+% True whenever the term `Term` belongs to the term order domain `Dom`.
+term_indomain(Term, Dom) :-
+  del_attr(Term, term_order),
+  put_attr(Term, term_order, Dom).
+
+% is_term(-Term) is det. 
+% 
+% True whenever `Term` is a term in the standard ordering for terms.
+is_term(Term) :-
+  term_indomain(Term, all_terms).
+
+% term_at_least(-Term, +X) is det.
+% term_at_least(-Term, -X) is det.
+%
+% True whenever `Term` is at least as large as `X` in the standard ordering for terms. The term
+% `X` may be a variable, in which case the resulting half-line domain has a variable endpoint
+% that can be instantiated to a constant later.
+term_at_least(Term, X) :-
+  (  var(X)
+  -> term_indomain(Term, terms_from(variable(X)))
+  ;  term_indomain(Term, terms_from(const(X)))
+  ).
+
+% term_at_most(-Term, +Y) is det.
+% term_at_most(-Term, -Y) is det.
+%
+% True whenever `Term` is at most as large as `Y` in the standard ordering for terms. The term
+% `Y` may be a variable, in which case the resulting half-line domain has a variable endpoint
+% that can be instantiated to a constant later.
+term_at_most(Term, Y) :-
+  (  var(Y)
+  -> term_indomain(Term, terms_to(variable(Y)))
+  ;  term_indomain(Term, terms_to(const(Y)))
+  ).
+
+% term_normalized(+Term0, +Term) is det.
+% term_normalized(+Term0, -Term) is det.
+%
+% True whenever `Term` has functor matching `Term0`s current variable status.
+term_normalized(Term0, Term) :-
+  (  (Term0 = variable(X), nonvar(X))
+  -> Term = const(X)
+  ;  Term = Term0
+  ).
+
+% dom_normalized(+Dom0, +Dom) is det.
+% dom_normalized(+Dom0, -Dom) is det.
+%
+% True whenever `Dom` has functors matching `Dom0`s current variable statuses for the relevant
+% endpoint variables, where applicable.
+dom_normalized(Dom0, Dom) :-
+  (  Dom0 = all_terms 
+  -> Dom  = Dom0
+  ;  Dom0 = terms_from(Term0)
+  -> term_normalized(Term0, Term),
+     Dom  = terms_from(Term)
+  ;  Dom0 = terms_to(Term0)
+  -> term_normalized(Term0, Term),
+     Dom  = terms_to(Term)
+  ;  Dom0 = [Term0]
+  -> term_normalized(Term0, Term),
+     Dom  = [Term]
+  ;  Dom0 = [TermX0, TermY0]
+  -> term_normalized(TermX0, TermX),
+     term_normalized(TermY0, TermY),
+     Dom  = [TermX, TermY]
+  ).
+
+% Intersection of two lower-bounded domains
+terms_from_from_intersection(X, Y, Intersection) :-
+  (  [X, Y] = [const(X1), const(Y1)] 
+  -> (  X1 @>= Y1
+     -> Intersection = terms_from(const(X1))
+     ;  Intersection = terms_from(const(Y1))
+     )
+  ;  (  Intersection = terms_from(X) ; Intersection = terms_from(Y) )
+  ).
+
+% Intersection of two upper-bounded domains 
+terms_to_to_intersection(X, Y, Intersection) :-
+  (  [X, Y] = [const(X1), const(Y1)] 
+  -> (  X1 @=< Y1
+     -> Intersection = terms_to(const(X1))
+     ;  Intersection = terms_to(const(Y1))
+     )
+  ;  (  Intersection = terms_to(X) ; Intersection = terms_to(Y) )
+  ).
+
+% Intersection of a lower-bounded domain with an upper-bounded domain
+terms_from_to_intersection(X, Y, Intersection) :-
+  (  [X, Y] = [const(X1), const(Y1)]
+  -> (  X1 == Y1
+     -> Intersection = [X]
+     ;  X1 @< Y1
+     -> Intersection = [X, Y]
+     ;  Intersection = []
+     )
+  ; ( Intersection = [X] ; Intersection = [X, Y] ; Intersection = [] )
+  ).
+
+% Intersection of a lower-bounded domain with a closed interval
+terms_from_int_intersection(X, [Y, Z], Intersection) :-
+  (  [X, Y] = [const(X1), const(Y1)] 
+  -> (  X1 @< Y1
+     -> Intersection = [Y, Z]
+     ;  X1 == Y1
+     -> (  Z = const(Z1)
+        -> (  X1 @< Z1
+           -> Intersection = [Y, Z]
+           ;  X1 == Z1
+           -> Intersection = [Y]
+           )
+        ;  ( Intersection = [Y, Z] ; Intersection = [Y] )
+        )
+     ;  X1 @> Y1
+        -> (  Z = const(Z1)
+           -> (  X1 @< Z1
+              -> Intersection = [X, Z]
+              ;  X1 == Z1
+              -> Intersection = [Z]
+              ;  Intersection = []
+              )
+           ;  ( Intersection = [X, Z] ; Intersection = [Z] ; Intersection = [] )
+           ) 
+     )
+  ;  [X, Z] = [const(X1), const(Z1)] 
+  -> (  X1 @< Z1
+     -> ( Intersection = [Y, Z] ; Intersection = [X, Z] )
+     ;  X1 == Z1
+     -> Intersection = [Z]
+     ;  X1 @> Z1
+     -> Intersection = []
+     )
+  ;  ( Intersection = [Y, Z] ; Intersection = [X, Z] ; Intersection = [Z] ; Intersection = [] )
+  ).
+
+% Intersection of an upper-bounded domain with a closed interval
+terms_to_int_intersection(X, [Y, Z], Intersection) :-
+  fail.
+
+term_dom_intersection(Dom1, Dom2, Intersection) :-
+  (  Dom1 == all_terms
+  -> Intersection = Dom2
+  ;  Dom2 == all_terms
+  -> Intersection = Dom1
+  ;  Dom1 = terms_from(X)
+  -> (  Dom2 = terms_from(Y)
+     -> terms_from_from_intersection(X, Y, Intersection) 
+     ;  Dom2 = terms_to(Y)
+     -> terms_from_to_intersection(X, Y, Intersection) 
+     ;  Dom2 = terms_int([Y, Z])
+     -> terms_from_int_intersection(X, [Y, Z], Intersection)
+     )
+  ;  Dom1 = terms_to(X)
+  -> (  Dom2 = terms_from(Y)
+     -> terms_from_to_intersection(Y, X, Intersection)
+     ;  Dom2 = terms_to(Y)
+     -> terms_to_to_intersection(X, Y, Intersection)
+     ;  Dom2 = terms_int([Y, Z])
+     -> fail
+     )
+  ;  Dom1 = terms_int([X, Y])
+  -> (  Dom2 = terms_from(Z)
+     -> terms_from_int_intersection(Z, [X, Y], Intersection) 
+     ;  Dom2 = terms_to(Z)
+     -> fail
+     ;  Dom2 = terms_int([Z, W])
+     -> fail
+     )
+  ).
+
+%attr_unify_hook(Dom1, Term2) :-
+  %(  get_attr(Term2, terms_in, Dom2) % Term2 is already attributed
+  %-> term_dom_intersection(Dom1, Dom2, NewDom),
+     %(  NewDom == []
+     %-> fail
+     %;  NewDom = [Value]
+     %-> Term2 = Value
+     %;  put_attr(Term2, terms_in, NewDom)
+     %)
+   %;  var(Term2)             % Term2 is not already attributed, but is a variable
+   %-> put_attr(Term2, terms_in, Dom1)
+   %;  (  Dom1 == all_terms   % Term2 is not a variable, so check if it belongs to Dom1
+      %-> true
+      %;  Dom1 = [X, Y],
+         %X @=< Term2,
+         %Term2 @=< Y
+      %)
+  %).
+
+attribute_goals(Term) -->
+  { get_attr(Term, term_order, Domain) },
+  [term_in(Term, Domain)].
+
 

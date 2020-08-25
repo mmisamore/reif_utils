@@ -13,3 +13,8 @@ The implementations provided here fall into the following groups:
 The real value provided here is in the tests: every provided predicate is implemented and tested 
 in all possible computable modes, with the goal of eliminating all unnecessary choice points.
 
+To install this module via `pack_install`, run
+```
+pack_install('https://github.com/mmisamore/reif_utils/archive/1.0.0.zip').
+```
+

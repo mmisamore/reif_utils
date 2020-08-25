@@ -2312,5 +2312,302 @@ test('$>=_-_-_-_eq_not_false', [ fail ]) :-
   $>=(X, X, Cond),
   Cond = false.
 
+
+% Tests for term_indomain
+test('term_indomain_-_+_put_get') :-
+  term_indomain(Term, all_terms),
+  get_attr(Term, term_order, all_terms).
+
+test('term_indomain_-_+_put_put_get') :-
+  term_indomain(Term, bad_terms),
+  term_indomain(Term, all_terms),
+  get_attr(Term, term_order, all_terms).
+
+
+% Tests for is_term
+test('is_term_-_get') :-
+  is_term(Term),
+  get_attr(Term, term_order, all_terms). 
+
+
+% Tests for term_at_least
+test('term_at_least_-_+') :-
+  term_at_least(Term, x),
+  get_attr(Term, term_order, terms_from(const(x))).
+
+test('term_at_least_-_-') :-
+  term_at_least(Term, X),
+  get_attr(Term, term_order, terms_from(variable(X))).
+
+
+% Tests for term_at_most
+test('term_at_most_-_+') :-
+  term_at_most(Term, y),
+  get_attr(Term, term_order, terms_to(const(y))).
+
+test('term_at_most_-_-') :-
+  term_at_most(Term, Y),
+  get_attr(Term, term_order, terms_to(variable(Y))).
+
+
+% Tests for term_normalized
+test('term_normalized_c_c') :-
+  term_normalized(const(3), const(3)).
+
+test('term_normalized_c_-') :-
+  term_normalized(const(3), Term),
+  Term = const(3).
+
+test('term_normalized_v_c') :-
+  X = 3,
+  term_normalized(variable(X), const(3)).
+
+test('term_normalized_v_-') :-
+  X = 3,
+  term_normalized(variable(X), Term),
+  Term = const(3).
+
+test('term_normalized_v_v') :-
+  term_normalized(variable(X), variable(X)).
+
+test('term_normalized_v_v_-') :-
+  term_normalized(variable(X), Term),
+  Term == variable(X).
+
+
+% Tests for dom_normalized
+test('dom_normalized_all_terms_+_+') :-
+  dom_normalized(all_terms, all_terms).
+
+test('dom_normalized_all_terms_+_-') :-
+  dom_normalized(all_terms, Dom),
+  Dom == all_terms.
+
+test('dom_normalized_terms_from_+_+_c') :-
+  term_normalized(const(3), Term),
+  dom_normalized(terms_from(const(3)), terms_from(Term)).
+
+test('dom_normalized_terms_from_+_+_v') :-
+  term_normalized(variable(X), Term),
+  dom_normalized(terms_from(variable(X)), terms_from(Term)).
+
+test('dom_normalized_terms_from_+_+_v_to_c') :-
+  X = 3,
+  term_normalized(variable(X), Term),
+  dom_normalized(terms_from(variable(X)), terms_from(Term)).
+
+test('dom_normalized_terms_from_+_-_c') :-
+  term_normalized(const(3), Term),
+  dom_normalized(terms_from(const(3)), Dom),
+  Dom == terms_from(Term).
+
+test('dom_normalized_terms_from_+_-_v') :-
+  term_normalized(variable(X), Term),
+  dom_normalized(terms_from(variable(X)), Dom),
+  Dom == terms_from(Term).
+
+test('dom_normalized_terms_from_+_-_v_to_c') :-
+  X = 3,
+  term_normalized(variable(X), Term),
+  dom_normalized(terms_from(variable(X)), Dom),
+  Dom == terms_from(Term).
+
+test('dom_normalized_terms_to_+_+_c') :-
+  term_normalized(const(3), Term),
+  dom_normalized(terms_to(const(3)), terms_to(Term)).
+
+test('dom_normalized_terms_to_+_+_v') :-
+  term_normalized(variable(X), Term),
+  dom_normalized(terms_to(variable(X)), terms_to(Term)).
+
+test('dom_normalized_terms_to_+_+_v_to_c') :-
+  X = 3,
+  term_normalized(variable(X), Term),
+  dom_normalized(terms_to(variable(X)), terms_to(Term)).
+
+test('dom_normalized_terms_to_+_-_c') :-
+  term_normalized(const(3), Term),
+  dom_normalized(terms_to(const(3)), Dom),
+  Dom == terms_to(Term).
+
+test('dom_normalized_terms_to_+_-_v') :-
+  term_normalized(variable(X), Term),
+  dom_normalized(terms_to(variable(X)), Dom),
+  Dom == terms_to(Term).
+
+test('dom_normalized_terms_to_+_-_v_to_c') :-
+  X = 3,
+  term_normalized(variable(X), Term),
+  dom_normalized(terms_to(variable(X)), Dom),
+  Dom == terms_to(Term).
+
+test('dom_normalized_singleton_+_+_c') :-
+  term_normalized(const(3), Term),
+  dom_normalized([const(3)], [Term]).
+
+test('dom_normalized_singleton_+_+_v') :-
+  term_normalized(variable(X), Term),
+  dom_normalized([variable(X)], [Term]).
+
+test('dom_normalized_singleton_+_+_v_to_c') :-
+  X = 3,
+  term_normalized(variable(X), Term),
+  dom_normalized([variable(X)], [Term]).
+
+test('dom_normalized_singleton_+_-_c') :-
+  term_normalized(const(3), Term),
+  dom_normalized([const(3)], Dom),
+  Dom == [Term].
+
+test('dom_normalized_singleton_+_-_v') :-
+  term_normalized(variable(X), Term),
+  dom_normalized([variable(X)], Dom),
+  Dom == [Term].
+
+test('dom_normalized_singleton_+_-_v_to_c') :-
+  X = 3,
+  term_normalized(variable(X), Term),
+  dom_normalized([variable(X)], Dom),
+  Dom == [Term].
+
+% tests for dom_normalized intervals
+
+
+% Tests for terms_from_from_intersection
+test('terms_from_from_intersection_c_c_>=') :-
+  terms_from_from_intersection(const(y), const(x), terms_from(const(y))).
+
+test('terms_from_from_intersection_c_c_<') :-
+  terms_from_from_intersection(const(x), const(y), terms_from(const(y))).
+
+test('terms_from_from_intersection_c_v') :-
+  findall(Intersection, terms_from_from_intersection(const(x), variable(Y), Intersection), Ans),
+  Ans = [terms_from(const(x)), terms_from(variable(Y))].
+
+test('terms_from_from_intersection_v_c') :-
+  findall(Intersection, terms_from_from_intersection(variable(X), const(y), Intersection), Ans),
+  Ans = [terms_from(variable(X)), terms_from(const(y))].
+
+test('terms_from_from_intersection_v_v') :-
+  findall(Intersection, terms_from_from_intersection(variable(X), variable(Y), Intersection), Ans),
+  Ans = [terms_from(variable(X)), terms_from(variable(Y))].
+
+% Tests for terms_to_to_intersection
+test('terms_to_to_intersection_c_c_>=') :-
+  terms_to_to_intersection(const(y), const(x), terms_to(const(x))).
+
+test('terms_to_to_intersection_c_c_<') :-
+  terms_to_to_intersection(const(x), const(y), terms_to(const(x))).
+
+test('terms_to_to_intersection_c_v') :-
+  findall(Intersection, terms_to_to_intersection(const(x), variable(Y), Intersection), Ans),
+  Ans = [terms_to(const(x)), terms_to(variable(Y))].
+
+test('terms_to_to_intersection_v_c') :-
+  findall(Intersection, terms_to_to_intersection(variable(X), const(y), Intersection), Ans),
+  Ans = [terms_to(variable(X)), terms_to(const(y))].
+
+test('terms_to_to_intersection_v_v') :-
+  findall(Intersection, terms_to_to_intersection(variable(X), variable(Y), Intersection), Ans),
+  Ans = [terms_to(variable(X)), terms_to(variable(Y))].
+
+% Tests for terms_from_to_intersection
+test('terms_from_to_intersection_c_c_=') :-
+  terms_from_to_intersection(const(x), const(x), [const(x)]).
+
+test('terms_from_to_intersection_c_c_<') :-
+  terms_from_to_intersection(const(x), const(y), [const(x), const(y)]).
+
+test('terms_from_to_intersection_c_c_>') :-
+  terms_from_to_intersection(const(y), const(x), []).
+
+test('terms_from_to_intersection_c_v') :-
+  findall(Intersection, terms_from_to_intersection(const(x), variable(Y), Intersection), Ans),
+  Ans = [[const(x)], [const(x), variable(Y)], []].
+
+test('terms_from_to_intersection_v_c') :-
+  findall(Intersection, terms_from_to_intersection(variable(X), const(y), Intersection), Ans),
+  Ans = [[variable(X)], [variable(X), const(y)], []].
+
+test('terms_from_to_intersection_v_v') :-
+  findall(Intersection, terms_from_to_intersection(variable(X), variable(Y), Intersection), Ans),
+  Ans = [[variable(X)], [variable(X), variable(Y)], []].
+
+
+% Tests for terms_from_int_intersection
+% | x R y | x R z | Out                      |
+% |   ?   |   ?   |  [y, z]; [x, z]; [z]; [] |
+% |   ?   |   <   |  [y, z]; [x, z]          | x
+% |   ?   |   =   |  [z]                     | x
+% |   ?   |   >   |  []                      | x
+% |   <   |   ?   |  [y,z]                   | x
+% |   <   |   <   |  [y,z]                   | x
+% |   <   |   =   |  ----                    | x
+% |   <   |   >   |  ----                    | x
+% |   =   |   ?   |  [y,z]; [y]              | x
+% |   =   |   <   |  [y,z]                   | x
+% |   =   |   =   |  [y]                     | x
+% |   =   |   >   |  ----                    | x
+% |   >   |   ?   |  [x,z]; [z]; []          | x
+% |   >   |   <   |  [x,z]                   | x
+% |   >   |   =   |  [z]                     | x
+% |   >   |   >   |  []                      | x
+
+test('terms_from_int_intersection_?_?') :-
+  findall(
+    Intersection,
+    terms_from_int_intersection(const(a), [variable(Y), variable(Z)], Intersection),
+    Ans),
+  Ans = [[variable(Y), variable(Z)], [const(a), variable(Z)], [variable(Z)], []].
+
+test('terms_from_int_intersection_?_<') :-
+  findall(
+    Intersection,
+    terms_from_int_intersection(const(a), [variable(Y), const(c)], Intersection),
+    Ans),
+  Ans = [[variable(Y), const(c)], [const(a), const(c)]].
+
+test('terms_from_int_intersection_?_=') :-
+  terms_from_int_intersection(const(a), [variable(_), const(a)], [const(a)]).
+
+test('terms_from_int_intersection_?_>') :-
+  terms_from_int_intersection(const(b), [variable(_), const(a)], []).
+
+test('terms_from_int_intersection_<_?') :-
+  terms_from_int_intersection(const(a), [const(b), variable(Z)], [const(b), variable(Z)]).
+
+test('terms_from_int_intersection_<_<') :-
+  terms_from_int_intersection(const(a), [const(b), const(c)], [const(b), const(c)]).
+
+test('terms_from_int_intersection_=_?') :-
+  findall(
+    Intersection,
+    terms_from_int_intersection(const(a), [const(a), variable(Z)], Intersection),
+    Ans),
+  Ans = [[const(a), variable(Z)], [const(a)]].
+
+test('terms_from_int_intersection_=_<') :-
+  terms_from_int_intersection(const(a), [const(a), const(b)], [const(a), const(b)]).
+
+test('terms_from_int_intersection_=_=') :-
+  terms_from_int_intersection(const(a), [const(a), const(a)], [const(a)]).
+
+test('terms_from_int_intersection_>_?') :-
+  findall(
+    Intersection,
+    terms_from_int_intersection(const(b), [const(a), variable(Z)], Intersection),
+    Ans),
+  Ans = [[const(b), variable(Z)], [variable(Z)], []].
+
+test('terms_from_int_intersection_>_<_[x,z]') :-
+  terms_from_int_intersection(const(b), [const(a), const(c)], [const(b), const(c)]).
+
+test('terms_from_int_intersection_>_=_[z]') :-
+  terms_from_int_intersection(const(b), [const(a), const(b)], [const(b)]).
+
+test('terms_from_int_intersection_>_>_[]') :-
+  terms_from_int_intersection(const(c), [const(a), const(b)], []).
+
+
 :- end_tests(reif_utils).
 
