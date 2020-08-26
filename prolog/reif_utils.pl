@@ -19,6 +19,7 @@
   , terms_to_to_intersection/3
   , terms_from_to_intersection/3
   , terms_from_int_intersection/3
+  , terms_to_int_intersection/3
   , ($<)/3
   , ($=<)/3
   , ($>)/3
@@ -316,8 +317,9 @@ $>=(X, Y, Cond) :-
 % `all_terms` represents the subset of all terms
 % `terms_from(X)` represents the half interval `[X, sup]`
 % `terms_to(Y)` represents the half interval `[inf, Y]`
-% `[X]` represents a singleton set 
-% `[X, Y]` represents a closed interval `[X, Y]`
+% `singleton(X)` represents a singleton set 
+% `[X, Y]` represents a closed interval `[X, Y]` that is not a singleton
+% `empty` represents the empty subset
 %
 % The domain theory permits known-constant interval endpoints of the form `const(-)` as 
 % well as variable endpoints of the form `variable(-)`. Domain intersections with 
@@ -360,7 +362,7 @@ term_at_most(Term, Y) :-
   ;  term_indomain(Term, terms_to(const(Y)))
   ).
 
-% term_normalized(+Term0, +Term) is det.
+% term_normalized(+Term0, +Term) is semidet.
 % term_normalized(+Term0, -Term) is det.
 %
 % True whenever `Term` has functor matching `Term0`s current variable status.
@@ -370,7 +372,7 @@ term_normalized(Term0, Term) :-
   ;  Term = Term0
   ).
 
-% dom_normalized(+Dom0, +Dom) is det.
+% dom_normalized(+Dom0, +Dom) is semidet.
 % dom_normalized(+Dom0, -Dom) is det.
 %
 % True whenever `Dom` has functors matching `Dom0`s current variable statuses for the relevant
@@ -384,16 +386,22 @@ dom_normalized(Dom0, Dom) :-
   ;  Dom0 = terms_to(Term0)
   -> term_normalized(Term0, Term),
      Dom  = terms_to(Term)
-  ;  Dom0 = [Term0]
+  ;  Dom0 = singleton(Term0)
   -> term_normalized(Term0, Term),
-     Dom  = [Term]
+     Dom  = singleton(Term)
   ;  Dom0 = [TermX0, TermY0]
   -> term_normalized(TermX0, TermX),
      term_normalized(TermY0, TermY),
-     Dom  = [TermX, TermY]
+     (  [TermX, TermY] = [const(A), const(A)]
+     -> Dom = singleton(TermX)
+     ;  Dom  = [TermX, TermY]
+     )
   ).
 
-% Intersection of two lower-bounded domains
+% terms_from_from_intersection(+X, +Y, -Intersection) is multi.
+%
+% Intersection of two lower-bounded domains. Input domains must be normalized first to yield
+% correct answers: see `dom_normalized/2`.
 terms_from_from_intersection(X, Y, Intersection) :-
   (  [X, Y] = [const(X1), const(Y1)] 
   -> (  X1 @>= Y1
@@ -403,7 +411,10 @@ terms_from_from_intersection(X, Y, Intersection) :-
   ;  (  Intersection = terms_from(X) ; Intersection = terms_from(Y) )
   ).
 
-% Intersection of two upper-bounded domains 
+% terms_to_to_intersection(+X, +Y, -Intersection) is multi.
+%
+% Intersection of two upper-bounded domains. Input domains must be normalized first to yield
+% correct answers: see `dom_normalized/2`.
 terms_to_to_intersection(X, Y, Intersection) :-
   (  [X, Y] = [const(X1), const(Y1)] 
   -> (  X1 @=< Y1
@@ -413,19 +424,31 @@ terms_to_to_intersection(X, Y, Intersection) :-
   ;  (  Intersection = terms_to(X) ; Intersection = terms_to(Y) )
   ).
 
-% Intersection of a lower-bounded domain with an upper-bounded domain
+% terms_from_to_intersection(+X, +Y, -Intersection) is multi.
+%
+% Intersection of a lower-bounded domain with an upper-bounded domain. Input domains must be 
+% normalized first to yield correct answers: see `dom_normalized/2`.
 terms_from_to_intersection(X, Y, Intersection) :-
   (  [X, Y] = [const(X1), const(Y1)]
   -> (  X1 == Y1
-     -> Intersection = [X]
+     -> Intersection = singleton(X)
      ;  X1 @< Y1
      -> Intersection = [X, Y]
-     ;  Intersection = []
+     ;  Intersection = empty 
      )
-  ; ( Intersection = [X] ; Intersection = [X, Y] ; Intersection = [] )
+  ; ( (  X = const(_)
+      -> Intersection = singleton(X)
+      ;  Intersection = singleton(Y)
+      )
+      ; Intersection = [X, Y] 
+      ; Intersection = empty 
+    )
   ).
 
-% Intersection of a lower-bounded domain with a closed interval
+% terms_from_int_intersection(+X, +Interval:list, -Intersection) is multi.
+%
+% Intersection of a lower-bounded domain with a closed interval. Input domains must be 
+% normalized first to yield correct answers: see `dom_normalized/2`.
 terms_from_int_intersection(X, [Y, Z], Intersection) :-
   (  [X, Y] = [const(X1), const(Y1)] 
   -> (  X1 @< Y1
@@ -434,37 +457,82 @@ terms_from_int_intersection(X, [Y, Z], Intersection) :-
      -> (  Z = const(Z1)
         -> (  X1 @< Z1
            -> Intersection = [Y, Z]
-           ;  X1 == Z1
-           -> Intersection = [Y]
+           ;  Intersection = singleton(Y)
            )
-        ;  ( Intersection = [Y, Z] ; Intersection = [Y] )
+        ;  ( Intersection = [Y, Z] ; Intersection = singleton(Y) )
         )
-     ;  X1 @> Y1
-        -> (  Z = const(Z1)
-           -> (  X1 @< Z1
-              -> Intersection = [X, Z]
-              ;  X1 == Z1
-              -> Intersection = [Z]
-              ;  Intersection = []
-              )
-           ;  ( Intersection = [X, Z] ; Intersection = [Z] ; Intersection = [] )
-           ) 
+     ;  (  Z = const(Z1)
+        -> (  X1 @< Z1
+           -> Intersection = [X, Z]
+           ;  X1 == Z1
+           -> Intersection = singleton(Z)
+           ;  Intersection = empty 
+           )
+        ;  ( Intersection = [X, Z] ; Intersection = singleton(X) ; Intersection = empty )
+        ) 
      )
   ;  [X, Z] = [const(X1), const(Z1)] 
   -> (  X1 @< Z1
      -> ( Intersection = [Y, Z] ; Intersection = [X, Z] )
      ;  X1 == Z1
-     -> Intersection = [Z]
-     ;  X1 @> Z1
-     -> Intersection = []
+     -> Intersection = singleton(Z)
+     ;  Intersection = empty 
      )
-  ;  ( Intersection = [Y, Z] ; Intersection = [X, Z] ; Intersection = [Z] ; Intersection = [] )
+  ;  ( Intersection = [Y, Z] ; 
+       Intersection = [X, Z] ; 
+       (  X = const(_)
+       -> Intersection = singleton(X)
+       ;  Intersection = singleton(Z)
+       ) ;
+       Intersection = empty )
   ).
 
-% Intersection of an upper-bounded domain with a closed interval
+
+% terms_from_int_intersection(+X, +Interval:list, -Intersection) is multi.
+%
+% Intersection of an upper-bounded domain with a closed interval. Input domains must be 
+% normalized first to yield correct answers: see `dom_normalized/2`.
 terms_to_int_intersection(X, [Y, Z], Intersection) :-
+  (  [X, Y] = [const(X1), const(Y1)]
+  -> (  X1 @< Y1
+     -> Intersection = empty 
+     ;  X1 == Y1
+     -> Intersection = singleton(Y)
+     ;  (  Z = const(Z1)
+        -> (  X1 @>= Z1
+           -> Intersection = [Y, Z]
+           ;  Intersection = [Y, X]
+           )
+        ;  ( Intersection = [Y, X] ; Intersection = [Y, Z] )
+        )
+     )
+  ;  [X, Z] = [const(X1), const(Z1)]
+  -> (  X1 @>= Z1
+     -> Intersection = [Y, Z]
+     ;  ( Intersection = [Y, X] ; Intersection = singleton(X) ; Intersection = empty )
+     )
+  ;  (  Intersection = [Y, Z] ;
+        Intersection = [Y, X] ;
+        (  X = const(_)
+        -> Intersection = singleton(X)
+        ;  Intersection = singleton(Y)
+        ) ;
+        Intersection = empty )
+  ).
+
+
+% terms_int_int_intersection(+Xs:list, +Ys:list, -Intersection) is multi.
+%
+% Intersection of two closed intervals.  Input domains must be normalized first to yield correct 
+% answers: see `dom_normalized/2`.
+terms_int_int_intersection([X, Y], [Z, W], Intersection) :-
   fail.
 
+
+% term_dom_intersection(+Dom1, +Dom2, -Intersection) is multi.
+%
+% Intersection of any two term domains for the standard ordering on terms. Domains are normalized
+% first before the intersection is computed.
 term_dom_intersection(Dom1, Dom2, Intersection) :-
   (  Dom1 == all_terms
   -> Intersection = Dom2
@@ -518,5 +586,4 @@ term_dom_intersection(Dom1, Dom2, Intersection) :-
 attribute_goals(Term) -->
   { get_attr(Term, term_order, Domain) },
   [term_in(Term, Domain)].
-
 
