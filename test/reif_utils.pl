@@ -2327,7 +2327,7 @@ test('term_indomain_-_+_put_put_get') :-
 % Tests for is_term
 test('is_term_-_get') :-
   is_term(Term),
-  get_attr(Term, term_order, all_terms). 
+  get_attr(Term, term_order, all_terms).
 
 
 % Tests for term_at_least
@@ -2493,28 +2493,28 @@ test('dom_normalized_interval_+_+_c_c') :-
   TermY0 = const(b),
   term_normalized(TermX0, TermX),
   term_normalized(TermY0, TermY),
-  dom_normalized([TermX0, TermY0], [TermX, TermY]). 
+  dom_normalized([TermX0, TermY0], [TermX, TermY]).
 
 test('dom_normalized_interval_+_+_c_v') :-
   TermX0 = const(a),
   TermY0 = variable(_),
   term_normalized(TermX0, TermX),
   term_normalized(TermY0, TermY),
-  dom_normalized([TermX0, TermY0], [TermX, TermY]). 
+  dom_normalized([TermX0, TermY0], [TermX, TermY]).
 
 test('dom_normalized_interval_+_+_v_c') :-
   TermX0 = variable(_),
   TermY0 = const(b),
   term_normalized(TermX0, TermX),
   term_normalized(TermY0, TermY),
-  dom_normalized([TermX0, TermY0], [TermX, TermY]). 
+  dom_normalized([TermX0, TermY0], [TermX, TermY]).
 
 test('dom_normalized_interval_+_+_v_v') :-
   TermX0 = variable(_),
   TermY0 = variable(_),
   term_normalized(TermX0, TermX),
   term_normalized(TermY0, TermY),
-  dom_normalized([TermX0, TermY0], [TermX, TermY]). 
+  dom_normalized([TermX0, TermY0], [TermX, TermY]).
 
 test('dom_normalized_interval_+_+_v_v2c') :-
   TermX0 = variable(_),
@@ -2522,7 +2522,7 @@ test('dom_normalized_interval_+_+_v_v2c') :-
   Y = b,
   term_normalized(TermX0, TermX),
   term_normalized(TermY0, TermY),
-  dom_normalized([TermX0, TermY0], [TermX, TermY]). 
+  dom_normalized([TermX0, TermY0], [TermX, TermY]).
 
 test('dom_normalized_interval_+_+_v2c_v') :-
   TermX0 = variable(X),
@@ -2530,7 +2530,7 @@ test('dom_normalized_interval_+_+_v2c_v') :-
   X = a,
   term_normalized(TermX0, TermX),
   term_normalized(TermY0, TermY),
-  dom_normalized([TermX0, TermY0], [TermX, TermY]). 
+  dom_normalized([TermX0, TermY0], [TermX, TermY]).
 
 test('dom_normalized_interval_+_+_v2c_v2c') :-
   TermX0 = variable(X),
@@ -2539,14 +2539,14 @@ test('dom_normalized_interval_+_+_v2c_v2c') :-
   Y = b,
   term_normalized(TermX0, TermX),
   term_normalized(TermY0, TermY),
-  dom_normalized([TermX0, TermY0], [TermX, TermY]). 
+  dom_normalized([TermX0, TermY0], [TermX, TermY]).
 
 test('dom_normalized_interval_+_-_c_c') :-
   TermX0 = const(a),
   TermY0 = const(b),
   term_normalized(TermX0, TermX),
   term_normalized(TermY0, TermY),
-  dom_normalized([TermX0, TermY0], Dom), 
+  dom_normalized([TermX0, TermY0], Dom),
   Dom == [TermX, TermY].
 
 test('dom_normalized_interval_+_-_c_v') :-
@@ -2554,7 +2554,7 @@ test('dom_normalized_interval_+_-_c_v') :-
   TermY0 = variable(_),
   term_normalized(TermX0, TermX),
   term_normalized(TermY0, TermY),
-  dom_normalized([TermX0, TermY0], Dom), 
+  dom_normalized([TermX0, TermY0], Dom),
   Dom == [TermX, TermY].
 
 test('dom_normalized_interval_+_-_v_c') :-
@@ -2562,7 +2562,7 @@ test('dom_normalized_interval_+_-_v_c') :-
   TermY0 = const(b),
   term_normalized(TermX0, TermX),
   term_normalized(TermY0, TermY),
-  dom_normalized([TermX0, TermY0], Dom), 
+  dom_normalized([TermX0, TermY0], Dom),
   Dom == [TermX, TermY].
 
 test('dom_normalized_interval_+_-_v_v') :-
@@ -2570,7 +2570,7 @@ test('dom_normalized_interval_+_-_v_v') :-
   TermY0 = variable(_),
   term_normalized(TermX0, TermX),
   term_normalized(TermY0, TermY),
-  dom_normalized([TermX0, TermY0], Dom), 
+  dom_normalized([TermX0, TermY0], Dom),
   Dom == [TermX, TermY].
 
 test('dom_normalized_interval_+_-_v_v2c') :-
@@ -2579,7 +2579,7 @@ test('dom_normalized_interval_+_-_v_v2c') :-
   Y = b,
   term_normalized(TermX0, TermX),
   term_normalized(TermY0, TermY),
-  dom_normalized([TermX0, TermY0], Dom), 
+  dom_normalized([TermX0, TermY0], Dom),
   Dom == [TermX, TermY].
 
 test('dom_normalized_interval_+_-_v2c_v') :-
@@ -2588,7 +2588,7 @@ test('dom_normalized_interval_+_-_v2c_v') :-
   X = a,
   term_normalized(TermX0, TermX),
   term_normalized(TermY0, TermY),
-  dom_normalized([TermX0, TermY0], Dom), 
+  dom_normalized([TermX0, TermY0], Dom),
   Dom == [TermX, TermY].
 
 test('dom_normalized_interval_+_-_v2c_v2c') :-
@@ -2598,7 +2598,7 @@ test('dom_normalized_interval_+_-_v2c_v2c') :-
   Y = b,
   term_normalized(TermX0, TermX),
   term_normalized(TermY0, TermY),
-  dom_normalized([TermX0, TermY0], Dom), 
+  dom_normalized([TermX0, TermY0], Dom),
   Dom == [TermX, TermY].
 
 test('dom_normalized_interval_+_+_c_c_sing') :-
@@ -2627,7 +2627,7 @@ test('dom_normalized_interval_+_-_c_v2c_sing') :-
 
 test('dom_normalized_interval_+_-_v2c_c_sing') :-
   X = a,
-  dom_normalized([variable(X), const(a)], Dom), 
+  dom_normalized([variable(X), const(a)], Dom),
   Dom = singleton(const(a)).
 
 test('dom_normalized_interval_+_-_v2c_v2c_sing') :-
@@ -2699,7 +2699,7 @@ test('terms_from_to_intersection_v_v') :-
   Ans = [singleton(variable(X)), [variable(X), variable(Y)], empty].
 
 test('terms_from_to_intersection_v_v') :-
-  once((terms_from_to_intersection(variable(X), variable(Y), singleton(variable(X))), 
+  once((terms_from_to_intersection(variable(X), variable(Y), singleton(variable(X))),
         X == Y)).
 
 
@@ -2780,21 +2780,21 @@ test('terms_from_int_intersection_>_>') :-
 % Tests for terms_to_int_intersection
 % | x R y | x R z | Out                   |
 % |   ?   |   ?   | [y,z]; [y,x]; [y]; [] |
-% |   ?   |   <   | [y,x]; [y]; []        | x
-% |   ?   |   =   | [y,z]                 | x
-% |   ?   |   >   | [y,z]                 | x
-% |   <   |   ?   | []                    | x
-% |   <   |   <   | []                    | x
-% |   <   |   =   | ----                  | x
-% |   <   |   >   | ----                  | x
-% |   =   |   ?   | [y]                   | x
-% |   =   |   <   | [y]                   | x
-% |   =   |   =   | [y]                   | x
-% |   =   |   >   | ----                  | x
-% |   >   |   ?   | [y,x]; [y,z]          | x
-% |   >   |   <   | [y,x]                 | x
-% |   >   |   =   | [y,z]                 | x
-% |   >   |   >   | [y,z]                 | x
+% |   ?   |   <   | [y,x]; [y]; []        |
+% |   ?   |   =   | [y,z]                 |
+% |   ?   |   >   | [y,z]                 |
+% |   <   |   ?   | []                    |
+% |   <   |   <   | []                    |
+% |   <   |   =   | ----                  |
+% |   <   |   >   | ----                  |
+% |   =   |   ?   | [y]                   |
+% |   =   |   <   | [y]                   |
+% |   =   |   =   | [y]                   |
+% |   =   |   >   | ----                  |
+% |   >   |   ?   | [y,x]; [y,z]          |
+% |   >   |   <   | [y,x]                 |
+% |   >   |   =   | [y,z]                 |
+% |   >   |   >   | [y,z]                 |
 test('terms_to_int_intersection_?_?') :-
   findall(
     Intersection,
@@ -2849,6 +2849,100 @@ test('terms_to_int_intersection_>_=') :-
 
 test('terms_to_int_intersection_>_>') :-
   terms_to_int_intersection(const(c), [const(a), const(b)], [const(a), const(b)]).
+
+
+% | xRz | xRw | yRz | yRw | Out                        | Analysis
+
+% |     |     |  <  |     | empty                      |
+% |     |  >  |     |     | empty                      |
+% |     |     |  =  |     | [y]                        |
+% |     |  =  |     |     | [x]                        |
+
+% |  <  |  <  |  >  |  <  | [z,y]                      | [x[zy]w]
+% |  <  |  <  |  >  |  =  | [z,y]                      | [x[zy]y]
+% |  <  |  <  |  >  |  >  | [z,w]                      | [x[zw]y]
+% |  <  |  <  |  >  |  ?  | [z,y]; [z,w]               |
+
+% |  <  |  <  |  ?  |  <  | [z,y]; [y]; empty          | [x[zy]w] or [xy][zw]
+% |  <  |  <  |  ?  |  =  | [z,y]                      | [x[zy]]
+% |  <  |  <  |  ?  |  >  | [z,w]                      | [x[zw]y]
+% |  <  |  <  |  ?  |  ?  | [z,w]; [z,y]; [y]; empty   |
+
+% |  <  |  ?  |  >  |  <  | [z,y]                      | [x[zy]w]
+% |  <  |  ?  |  >  |  =  | [z,y]                      | [x[zy]]
+% |  <  |  ?  |  >  |  >  | [z,w]                      | [x[zw]y]
+% |  <  |  ?  |  >  |  ?  | [z,y]; [z,w]               |
+
+% |  <  |  ?  |  ?  |  <  | [z,y]; [y]; empty          | [x[zy]w] or [xy][zw]
+% |  <  |  ?  |  ?  |  =  | [z,y]                      | [x[zy]]
+% |  <  |  ?  |  ?  |  >  | [z,w]                      | [x[zw]y]
+% |  <  |  ?  |  ?  |  ?  | [z,w]; [z,y]; [y]; empty   |
+
+% |  =  |  <  |  >  |  <  | [z,y]                      | [[zy]w]
+% |  =  |  <  |  >  |  =  | [z,y]                      | [[zy]y]
+% |  =  |  <  |  >  |  >  | [z,w]                      | [[zw]y]
+% |  =  |  <  |  >  |  ?  | [z,y]; [z,w]               |
+
+% |  =  |  <  |  ?  |  <  | [z,y]                      | [[zy]w]
+% |  =  |  <  |  ?  |  =  | [z,y]                      | [zy]
+% |  =  |  <  |  ?  |  >  | [z,w]                      | [[zw]y]
+% |  =  |  <  |  ?  |  ?  | [z,y]; [z,w]               |
+
+% |  =  |  ?  |  >  |  <  | [z,y]                      | [[zy]w]
+% |  =  |  ?  |  >  |  =  | [z,y]                      | [zy]
+% |  =  |  ?  |  >  |  >  | [z,w]                      | [[zw]y]
+% |  =  |  ?  |  >  |  ?  | [z,y]; [z,w]               |
+
+% |  =  |  ?  |  ?  |  <  | [z,y]                      | [[zy]w]
+% |  =  |  ?  |  ?  |  =  | [z,y]                      | [[zy]y]
+% |  =  |  ?  |  ?  |  >  | [z,w]                      | [[zw]y]
+% |  =  |  ?  |  ?  |  ?  | [z,y]; [z,w]               |
+
+% |  >  |  <  |  >  |  <  | [x,y]                      | [z[xy]w]
+% |  >  |  <  |  >  |  =  | [x,y]                      | [z[xy]y]
+% |  >  |  <  |  >  |  >  | [x,w]                      | [z[xw]y]
+% |  >  |  <  |  >  |  ?  | [x,y]; [x,w]               |
+
+% |  >  |  <  |  ?  |  <  | [x,y]                      | [z[xy]w]
+% |  >  |  <  |  ?  |  =  | [x,y]                      | [z[xy]y]
+% |  >  |  <  |  ?  |  >  | [x,w]                      | [z[xw]y]
+% |  >  |  <  |  ?  |  ?  | [x,y]; [x,w]               |
+
+% |  >  |  ?  |  >  |  <  | [x,y]                      | [z[xy]w]
+% |  >  |  ?  |  >  |  =  | [x,y]                      | [z[xy]y]
+% |  >  |  ?  |  >  |  >  | [x,w]; [x]; empty          | [z[xw]y] or [zw][xy]
+% |  >  |  ?  |  >  |  ?  | [x,w]; [x,y]; [x]; empty   |
+
+% |  >  |  ?  |  ?  |  <  | [x,y]                      | [z[xy]w]
+% |  >  |  ?  |  ?  |  =  | [x,y]                      | [z[xy]y]
+% |  >  |  ?  |  ?  |  >  | [x,w]; [x]; empty          | [z[xw]y] or [zw][xy]
+% |  >  |  ?  |  ?  |  ?  | [x,w]; [x,y]; [x]; empty   |
+
+% |  ?  |  <  |  >  |  <  | [z,y]; [x,y]               | [x[zy]w] or [z[xy]w]
+% |  ?  |  <  |  >  |  =  | [z,y]; [x,y]               | [x[zy]y] or [z[xy]y]
+% |  ?  |  <  |  >  |  >  | [z,w]; [x,w]               | [x[zw]y] or [z[xw]y]
+% |  ?  |  <  |  >  |  ?  | [z,w]; [x,w]; [z,y]; [x,y] |
+
+% |  ?  |  <  |  ?  |  <  | [x,y]; [z,y]; [y]; empty   | [z[xy]w] or [x[zy]w] or [xy][zw]
+% |  ?  |  <  |  ?  |  =  | [x,y]; [z,y]               | [z[xy]] or [x[zy]]
+% |  ?  |  <  |  ?  |  >  | [z,w]; [x,w]               | [z[xw]y] or [x[zw]y]
+% |  ?  |  <  |  ?  |  ?  | [z,w]; [x,w]; [z,y];       |
+%                         | [x,y]; [y]; empty          |
+
+% |  ?  |  ?  |  >  |  <  | [z,y]; [x,y]               | [x[zy]w] or [z[xy]w]
+% |  ?  |  ?  |  >  |  =  | [z,y]; [x,y]               | [x[zy]] or [z[xy]]
+% |  ?  |  ?  |  >  |  >  | [z,w]; [x,w]; [x]; empty   | [x[zw]y] or [z[xw]y] or [zw][xy]
+% |  ?  |  ?  |  >  |  ?  | [z,w]; [x,w]; [z,y];       |
+%                         | [x,y]; [x]; empty          |
+
+% |  ?  |  ?  |  ?  |  <  | [x,y]; [z,y]; [y]; empty   | [z[xy]w] or [x[zy]w] or [xy][zw]
+% |  ?  |  ?  |  ?  |  =  | [x,y]; [z,y]               | [x[zy]] or [z[xy]]
+% |  ?  |  ?  |  ?  |  >  | [z,w]; [x,w]; [x]; empty   | [x[zw]y] or [z[xw]y] or [zw][xy]
+% |  ?  |  ?  |  ?  |  ?  | [z,w]; [x,w]; [z,y];       |
+%                         | [x,y]; [x]; [y]; empty     |
+
+
+% singleton intersections with all other Doms
 
 
 :- end_tests(reif_utils).
