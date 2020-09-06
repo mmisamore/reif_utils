@@ -2699,8 +2699,10 @@ test('terms_from_to_intersection_v_v') :-
   Ans = [singleton(variable(X)), [variable(X), variable(Y)], empty].
 
 test('terms_from_to_intersection_v_v') :-
-  once((terms_from_to_intersection(variable(X), variable(Y), singleton(variable(X))),
-        X == Y)).
+  once((
+    terms_from_to_intersection(variable(X), variable(Y), singleton(variable(X))),
+    X == Y
+  )).
 
 
 % Tests for terms_from_int_intersection
@@ -2851,99 +2853,279 @@ test('terms_to_int_intersection_>_>') :-
   terms_to_int_intersection(const(c), [const(a), const(b)], [const(a), const(b)]).
 
 
+% Tests for terms_int_int_intersection
 % | xRz | xRw | yRz | yRw | Out                        | Analysis
+% |     |     |  <  |     | empty                      | [xy][zw]
+% |     |  >  |     |     | empty                      | [zw][xy]
+% |     |     |  =  |     | [y]                        | [x[y]w]
+% |     |  =  |     |     | [x]                        | [z[x]y]
+test('terms_int_int_intersection_y<z') :-
+  terms_int_int_intersection([variable(_), const(b)], [const(c), variable(_)], empty).
 
-% |     |     |  <  |     | empty                      |
-% |     |  >  |     |     | empty                      |
-% |     |     |  =  |     | [y]                        |
-% |     |  =  |     |     | [x]                        |
+test('terms_int_int_intersection_x>w') :-
+  terms_int_int_intersection([const(b), variable(_)], [variable(_), const(a)], empty).
 
+test('terms_int_int_intersection_y=z') :-
+  terms_int_int_intersection([variable(_), const(b)], [const(b), variable(_)], singleton(const(b))).
+
+test('terms_int_int_intersection_x=w') :-
+  terms_int_int_intersection([const(a), variable(_)], [variable(_), const(a)], singleton(const(a))).
+
+% | xRz | xRw | yRz | yRw | Out                        | Analysis
 % |  <  |  <  |  >  |  <  | [z,y]                      | [x[zy]w]
 % |  <  |  <  |  >  |  =  | [z,y]                      | [x[zy]y]
 % |  <  |  <  |  >  |  >  | [z,w]                      | [x[zw]y]
-% |  <  |  <  |  >  |  ?  | [z,y]; [z,w]               |
+test('terms_int_int_intersection_<_<_>_<') :-
+  terms_int_int_intersection([const(a), const(c)], [const(b), const(d)], [const(b), const(c)]).
 
-% |  <  |  <  |  ?  |  <  | [z,y]; [y]; empty          | [x[zy]w] or [xy][zw]
-% |  <  |  <  |  ?  |  =  | [z,y]                      | [x[zy]]
-% |  <  |  <  |  ?  |  >  | [z,w]                      | [x[zw]y]
-% |  <  |  <  |  ?  |  ?  | [z,w]; [z,y]; [y]; empty   |
+test('terms_int_int_intersection_<_<_>_=') :-
+  terms_int_int_intersection([const(a), const(c)], [const(b), const(c)], [const(b), const(c)]).
 
-% |  <  |  ?  |  >  |  <  | [z,y]                      | [x[zy]w]
-% |  <  |  ?  |  >  |  =  | [z,y]                      | [x[zy]]
-% |  <  |  ?  |  >  |  >  | [z,w]                      | [x[zw]y]
-% |  <  |  ?  |  >  |  ?  | [z,y]; [z,w]               |
+test('terms_int_int_intersection_<_<_>_>') :-
+  terms_int_int_intersection([const(a), const(d)], [const(b), const(c)], [const(b), const(c)]).
 
-% |  <  |  ?  |  ?  |  <  | [z,y]; [y]; empty          | [x[zy]w] or [xy][zw]
-% |  <  |  ?  |  ?  |  =  | [z,y]                      | [x[zy]]
-% |  <  |  ?  |  ?  |  >  | [z,w]                      | [x[zw]y]
-% |  <  |  ?  |  ?  |  ?  | [z,w]; [z,y]; [y]; empty   |
+% | xRz | xRw | yRz | yRw | Out                        | Analysis
+% |  <  |  <  |  ?  |  ?  | [z,w]; [z,y]; [z]; empty   | [x[zw]y] or [x[zy]w] or [xy][zw]
+test('terms_int_int_intersection_<_<_?_?') :-
+  findall(
+    Intersection,
+    terms_int_int_intersection([const(a), variable(Y)], [const(b), const(c)], Intersection),
+    Ans),
+  Ans = [[const(b), const(c)], [const(b), variable(Y)], singleton(const(b)), empty].
 
+% | xRz | xRw | yRz | yRw | Out                        | Analysis
+% |  <  |  ?  |  >  |  ?  | [z,w]; [z,y]               | [x[zw]y] or [x[zy]w]
+test('terms_int_int_intersection_<_?_>_?') :-
+  findall(
+    Intersection,
+    terms_int_int_intersection([const(a), const(c)], [const(b), variable(W)], Intersection),
+    Ans),
+  Ans = [[const(b), variable(W)], [const(b), const(c)]].
+
+% | xRz | xRw | yRz | yRw | Out                        | Analysis
+% |  <  |  ?  |  ?  |  ?  | [z,w]; [z,y]; [y]; empty   | [x[zw]y] or [x[zy]w] or [xy][zw]
+test('terms_int_int_intersection_<_?_?_?') :-
+  findall(
+    Intersection,
+    terms_int_int_intersection([const(a), variable(Y)], [const(c), variable(W)], Intersection),
+    Ans),
+  Ans = [[const(c), variable(W)], [const(c), variable(Y)], singleton(const(c)), empty].
+
+% | xRz | xRw | yRz | yRw | Out                        | Analysis
 % |  =  |  <  |  >  |  <  | [z,y]                      | [[zy]w]
 % |  =  |  <  |  >  |  =  | [z,y]                      | [[zy]y]
 % |  =  |  <  |  >  |  >  | [z,w]                      | [[zw]y]
-% |  =  |  <  |  >  |  ?  | [z,y]; [z,w]               |
+test('terms_int_int_intersection_=_<_>_<') :-
+  terms_int_int_intersection([const(a), const(b)], [const(a), const(d)], [const(a), const(b)]).
 
-% |  =  |  <  |  ?  |  <  | [z,y]                      | [[zy]w]
-% |  =  |  <  |  ?  |  =  | [z,y]                      | [zy]
-% |  =  |  <  |  ?  |  >  | [z,w]                      | [[zw]y]
-% |  =  |  <  |  ?  |  ?  | [z,y]; [z,w]               |
+test('terms_int_int_intersection_=_<_>_=') :-
+  terms_int_int_intersection([const(a), const(d)], [const(a), const(d)], [const(a), const(d)]).
 
-% |  =  |  ?  |  >  |  <  | [z,y]                      | [[zy]w]
-% |  =  |  ?  |  >  |  =  | [z,y]                      | [zy]
-% |  =  |  ?  |  >  |  >  | [z,w]                      | [[zw]y]
-% |  =  |  ?  |  >  |  ?  | [z,y]; [z,w]               |
+test('terms_int_int_intersection_=_<_>_>') :-
+  terms_int_int_intersection([const(a), const(d)], [const(a), const(c)], [const(a), const(c)]).
 
-% |  =  |  ?  |  ?  |  <  | [z,y]                      | [[zy]w]
-% |  =  |  ?  |  ?  |  =  | [z,y]                      | [[zy]y]
-% |  =  |  ?  |  ?  |  >  | [z,w]                      | [[zw]y]
-% |  =  |  ?  |  ?  |  ?  | [z,y]; [z,w]               |
+% | xRz | xRw | yRz | yRw | Out                        | Analysis
+% |  =  |  <  |  ?  |  ?  | [z,w]; [z,y]               | [[zw]y] or [[zy]w]
+test('terms_int_int_intersection_=_<_?_?') :-
+  findall(
+    Intersection,
+    terms_int_int_intersection([const(a), variable(Y)], [const(a), const(d)], Intersection),
+    Ans),
+  Ans = [[const(a), const(d)], [const(a), variable(Y)]].
 
+% | xRz | xRw | yRz | yRw | Out                        | Analysis
+% |  =  |  ?  |  >  |  ?  | [z,w]; [z,y]               | [[zw]y] or [[zy]w]
+test('terms_int_int_intersection_=_?_>_?') :-
+  findall(
+    Intersection,
+    terms_int_int_intersection([const(a), const(b)], [const(a), variable(W)], Intersection),
+    Ans),
+  Ans = [[const(a), variable(W)], [const(a), const(b)]].
+
+% | xRz | xRw | yRz | yRw | Out                        | Analysis
+% |  =  |  ?  |  ?  |  ?  | [z,w]; [z,y]               | [[zw]y] or [[zy]w]
+test('terms_int_int_intersection_=_?_?_?') :-
+  findall(
+    Intersection,
+    terms_int_int_intersection([const(a), variable(Y)], [const(a), variable(W)], Intersection),
+    Ans),
+  Ans = [[const(a), variable(W)], [const(a), variable(Y)]].
+
+% | xRz | xRw | yRz | yRw | Out                        | Analysis
 % |  >  |  <  |  >  |  <  | [x,y]                      | [z[xy]w]
 % |  >  |  <  |  >  |  =  | [x,y]                      | [z[xy]y]
 % |  >  |  <  |  >  |  >  | [x,w]                      | [z[xw]y]
-% |  >  |  <  |  >  |  ?  | [x,y]; [x,w]               |
+test('terms_int_int_intersection_>_<_>_<') :-
+  terms_int_int_intersection([const(b), const(c)], [const(a), const(d)], [const(b), const(c)]).
 
-% |  >  |  <  |  ?  |  <  | [x,y]                      | [z[xy]w]
-% |  >  |  <  |  ?  |  =  | [x,y]                      | [z[xy]y]
-% |  >  |  <  |  ?  |  >  | [x,w]                      | [z[xw]y]
-% |  >  |  <  |  ?  |  ?  | [x,y]; [x,w]               |
+test('terms_int_int_intersection_>_<_>_=') :-
+  terms_int_int_intersection([const(b), const(c)], [const(a), const(c)], [const(b), const(c)]).
 
-% |  >  |  ?  |  >  |  <  | [x,y]                      | [z[xy]w]
-% |  >  |  ?  |  >  |  =  | [x,y]                      | [z[xy]y]
-% |  >  |  ?  |  >  |  >  | [x,w]; [x]; empty          | [z[xw]y] or [zw][xy]
-% |  >  |  ?  |  >  |  ?  | [x,w]; [x,y]; [x]; empty   |
+test('terms_int_int_intersection_>_<_>_>') :-
+  terms_int_int_intersection([const(b), const(d)], [const(a), const(c)], [const(b), const(c)]).
 
-% |  >  |  ?  |  ?  |  <  | [x,y]                      | [z[xy]w]
-% |  >  |  ?  |  ?  |  =  | [x,y]                      | [z[xy]y]
-% |  >  |  ?  |  ?  |  >  | [x,w]; [x]; empty          | [z[xw]y] or [zw][xy]
-% |  >  |  ?  |  ?  |  ?  | [x,w]; [x,y]; [x]; empty   |
+% | xRz | xRw | yRz | yRw | Out                        | Analysis
+% |  >  |  <  |  ?  |  ?  | [x,w]; [x,y]               | [z[xw]y] or [z[xy]w]
+test('terms_int_int_intersection_>_<_?_?') :-
+  findall(
+    Intersection,
+    terms_int_int_intersection([const(c), variable(Y)], [const(a), const(d)], Intersection),
+    Ans),
+  Ans = [[const(c), const(d)], [const(c), variable(Y)]].
 
-% |  ?  |  <  |  >  |  <  | [z,y]; [x,y]               | [x[zy]w] or [z[xy]w]
-% |  ?  |  <  |  >  |  =  | [z,y]; [x,y]               | [x[zy]y] or [z[xy]y]
-% |  ?  |  <  |  >  |  >  | [z,w]; [x,w]               | [x[zw]y] or [z[xw]y]
-% |  ?  |  <  |  >  |  ?  | [z,w]; [x,w]; [z,y]; [x,y] |
+% | xRz | xRw | yRz | yRw | Out                        | Analysis
+% |  >  |  ?  |  >  |  ?  | [x,w]; [x,y]; [x]; empty   | [z[xw]y] or [z[xy]w] or [zw][xy]
+test('terms_int_int_intersection_>_?_>_?') :-
+  findall(
+    Intersection,
+    terms_int_int_intersection([const(b), const(c)], [const(a), variable(W)], Intersection),
+    Ans),
+  Ans = [[const(b), variable(W)], [const(b), const(c)], singleton(const(b)), empty].
 
-% |  ?  |  <  |  ?  |  <  | [x,y]; [z,y]; [y]; empty   | [z[xy]w] or [x[zy]w] or [xy][zw]
-% |  ?  |  <  |  ?  |  =  | [x,y]; [z,y]               | [z[xy]] or [x[zy]]
+% | xRz | xRw | yRz | yRw | Out                        | Analysis
+% |  >  |  ?  |  ?  |  ?  | [x,w]; [x,y]; [x]; empty   | [z[xw]y] or [z[xy]w] or [zw][xy]
+test('terms_int_int_intersection_>_?_?_?') :-
+  findall(
+    Intersection,
+    terms_int_int_intersection([const(c), variable(Y)], [const(a), variable(W)], Intersection),
+    Ans),
+  Ans = [[const(c), variable(W)], [const(c), variable(Y)], singleton(const(c)), empty].
+
+% | xRz | xRw | yRz | yRw | Out                        | Analysis
+% |  ?  |  <  |  ?  |  <  | [z,y]; [x,y]; [y]; empty   | [z[xy]w] or [x[zy]w] or [xy][zw]
+% |  ?  |  <  |  ?  |  =  | [z,y]; [x,y]               | [z[xy]] or [x[zy]]
 % |  ?  |  <  |  ?  |  >  | [z,w]; [x,w]               | [z[xw]y] or [x[zw]y]
 % |  ?  |  <  |  ?  |  ?  | [z,w]; [x,w]; [z,y];       |
 %                         | [x,y]; [y]; empty          |
+test('terms_int_int_intersection_?_<_?_<') :-
+  findall(
+    Intersection,
+    terms_int_int_intersection([const(a), const(b)], [variable(Z), const(d)], Intersection),
+    Ans),
+  Ans = [[variable(Z), const(b)], [const(a), const(b)], singleton(const(b)), empty].
 
+test('terms_int_int_intersection_?_<_?_=') :-
+  findall(
+    Intersection,
+    terms_int_int_intersection([const(a), const(b)], [variable(Z), const(b)], Intersection),
+    Ans),
+  Ans = [[variable(Z), const(b)], [const(a), const(b)]].
+
+test('terms_int_int_intersection_?_<_?_>') :-
+  findall(
+    Intersection,
+    terms_int_int_intersection([const(a), const(c)], [variable(Z), const(b)], Intersection),
+    Ans),
+  Ans = [[variable(Z), const(b)], [const(a), const(b)]].
+
+test('terms_int_int_intersection_?_<_?_?') :-
+  findall(
+    Intersection,
+    terms_int_int_intersection([const(a), variable(Y)], [variable(Z), const(b)], Intersection),
+    Ans),
+  Ans = [[variable(Z), const(b)], [const(a), const(b)], [variable(Z), variable(Y)],
+         [const(a), variable(Y)], singleton(variable(Y)), empty].
+
+test('terms_int_int_intersection_?_<_?_?_v') :-
+  once((
+    terms_int_int_intersection([const(a), variable(Y)], [variable(Z), const(b)],
+                               singleton(variable(Y))),
+    Y == Z
+  )).
+
+% | xRz | xRw | yRz | yRw | Out                        | Analysis
 % |  ?  |  ?  |  >  |  <  | [z,y]; [x,y]               | [x[zy]w] or [z[xy]w]
 % |  ?  |  ?  |  >  |  =  | [z,y]; [x,y]               | [x[zy]] or [z[xy]]
 % |  ?  |  ?  |  >  |  >  | [z,w]; [x,w]; [x]; empty   | [x[zw]y] or [z[xw]y] or [zw][xy]
 % |  ?  |  ?  |  >  |  ?  | [z,w]; [x,w]; [z,y];       |
 %                         | [x,y]; [x]; empty          |
+test('terms_int_int_intersection_?_?_>_<') :-
+  findall(
+    Intersection,
+    terms_int_int_intersection([variable(X), const(c)], [const(b), const(d)], Intersection),
+    Ans),
+  Ans = [[const(b), const(c)], [variable(X), const(c)]].
 
+test('terms_int_int_intersection_?_?_>_=') :-
+  findall(
+    Intersection,
+    terms_int_int_intersection([variable(X), const(c)], [const(b), const(c)], Intersection),
+    Ans),
+  Ans = [[const(b), const(c)], [variable(X), const(c)]].
+
+test('terms_int_int_intersection_?_?_>_>') :-
+  findall(
+    Intersection,
+    terms_int_int_intersection([variable(X), const(d)], [const(b), const(c)], Intersection),
+    Ans),
+  Ans = [[const(b), const(c)], [variable(X), const(c)], singleton(const(c)), empty].
+
+test('terms_int_int_intersection_?_?_>_?') :-
+  findall(
+    Intersection,
+    terms_int_int_intersection([variable(X), const(c)], [const(b), variable(W)], Intersection),
+    Ans),
+  Ans = [[const(b), variable(W)], [variable(X), variable(W)], [const(b), const(c)],
+         [variable(X), const(c)], singleton(variable(X)), empty].
+
+test('terms_int_int_intersection_?_?_>_?_v') :-
+  once((
+    terms_int_int_intersection([variable(X), const(c)], [const(b), variable(W)],
+                               singleton(variable(X))),
+    X == W
+  )).
+
+% | xRz | xRw | yRz | yRw | Out                        | Analysis
 % |  ?  |  ?  |  ?  |  <  | [x,y]; [z,y]; [y]; empty   | [z[xy]w] or [x[zy]w] or [xy][zw]
 % |  ?  |  ?  |  ?  |  =  | [x,y]; [z,y]               | [x[zy]] or [z[xy]]
 % |  ?  |  ?  |  ?  |  >  | [z,w]; [x,w]; [x]; empty   | [x[zw]y] or [z[xw]y] or [zw][xy]
 % |  ?  |  ?  |  ?  |  ?  | [z,w]; [x,w]; [z,y];       |
 %                         | [x,y]; [x]; [y]; empty     |
+test('terms_int_int_intersection_?_?_?_<') :-
+  findall(
+    Intersection,
+    terms_int_int_intersection([variable(X), const(b)], [variable(Z), const(d)], Intersection),
+    Ans),
+  Ans = [[variable(X), const(b)], [variable(Z), const(b)], singleton(const(b)), empty].
+
+test('terms_int_int_intersection_?_?_?_=') :-
+  findall(
+    Intersection,
+    terms_int_int_intersection([variable(X), const(b)], [variable(Z), const(b)], Intersection),
+    Ans),
+  Ans = [[variable(X), const(b)], [variable(Z), const(b)]].
+
+test('terms_int_int_intersection_?_?_?_>') :-
+  findall(
+    Intersection,
+    terms_int_int_intersection([variable(X), const(d)], [variable(Z), const(b)], Intersection),
+    Ans),
+  Ans = [[variable(Z), const(b)], [variable(X), const(b)], singleton(const(b)), empty].
+
+test('terms_int_int_intersection_?_?_?_?') :-
+  findall(
+    Intersection,
+    terms_int_int_intersection([variable(X), variable(Y)], [variable(Z), variable(W)], Intersection),
+    Ans),
+  Ans = [[variable(Z), variable(W)], [variable(X), variable(W)], [variable(Z), variable(Y)],
+         [variable(X), variable(Y)], singleton(variable(X)), singleton(variable(Y)), empty].
+
+test('terms_int_int_intersection_?_?_?_?_x==w') :-
+  once((
+    terms_int_int_intersection([variable(X), variable(_)], [variable(_), variable(W)], 
+                               singleton(variable(X))),
+    X == W
+  )).
+
+test('terms_int_int_intersection_?_?_?_?_y==z') :-
+  once((
+    terms_int_int_intersection([variable(_), variable(Y)], [variable(Z), variable(_)], 
+                               singleton(variable(Y))),
+    Y == Z
+  )).
 
 
 % singleton intersections with all other Doms
-
 
 :- end_tests(reif_utils).
 

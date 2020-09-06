@@ -1,43 +1,44 @@
 :- module(reif_utils,
-  [ (#<)/3
-  , (#>)/3
-  , (#=<)/3
-  , (#>=)/3
-  , (==)/3
-  , (\==)/3
-  , (@<)/3
-  , (@=<)/3
-  , (@>)/3
-  , (@>=)/3
-  , term_indomain/2
-  , is_term/1
-  , term_normalized/2
-  , dom_normalized/2
-  , term_at_least/2
-  , term_at_most/2
-  , terms_from_from_intersection/3
-  , terms_to_to_intersection/3
-  , terms_from_to_intersection/3
-  , terms_from_int_intersection/3
-  , terms_to_int_intersection/3
-  , ($<)/3
-  , ($=<)/3
-  , ($>)/3
-  , ($>=)/3
-  , op(700, xfx, #>)
-  , op(700, xfx, #<)
-  , op(700, xfx, #>=)
-  , op(700, xfx, #=<)
-  , op(700, xfx, ==)
-  , op(700, xfx, \==)
-  , op(700, xfx, @<)
-  , op(700, xfx, @=<)
-  , op(700, xfx, @>)
-  , op(700, xfx, @>=)
-  , op(700, xfx, $<)
-  , op(700, xfx, $=<)
-  , op(700, xfx, $>)
-  , op(700, xfx, $>=)
+  [ (#<)/3,
+    (#>)/3,
+    (#=<)/3,
+    (#>=)/3,
+    (==)/3,
+    (\==)/3,
+    (@<)/3,
+    (@=<)/3,
+    (@>)/3,
+    (@>=)/3,
+    term_indomain/2,
+    is_term/1,
+    term_normalized/2,
+    dom_normalized/2,
+    term_at_least/2,
+    term_at_most/2,
+    terms_from_from_intersection/3,
+    terms_to_to_intersection/3,
+    terms_from_to_intersection/3,
+    terms_from_int_intersection/3,
+    terms_to_int_intersection/3,
+    terms_int_int_intersection/3,
+    ($<)/3,
+    ($=<)/3,
+    ($>)/3,
+    ($>=)/3,
+    op(700, xfx, #>),
+    op(700, xfx, #<),
+    op(700, xfx, #>=),
+    op(700, xfx, #=<),
+    op(700, xfx, ==),
+    op(700, xfx, \==),
+    op(700, xfx, @<),
+    op(700, xfx, @=<),
+    op(700, xfx, @>),
+    op(700, xfx, @>=),
+    op(700, xfx, $<),
+    op(700, xfx, $=<),
+    op(700, xfx, $>),
+    op(700, xfx, $>=)
   ]).
 
 :- use_module(library(clpfd)).
@@ -487,7 +488,6 @@ terms_from_int_intersection(X, [Y, Z], Intersection) :-
        Intersection = empty )
   ).
 
-
 % terms_from_int_intersection(+X, +Interval:list, -Intersection) is multi.
 %
 % Intersection of an upper-bounded domain with a closed interval. Input domains must be 
@@ -520,14 +520,87 @@ terms_to_int_intersection(X, [Y, Z], Intersection) :-
         Intersection = empty )
   ).
 
+% Helper predicate for comparing endpoints
+term_order(X, Y, Ord) :-
+  (  [X, Y] = [const(X1), const(Y1)]
+  -> (  X1 @< Y1
+     -> Ord = '<'
+     ;  X1 @> Y1
+     -> Ord = '>'
+     ;  Ord = '='
+     )
+  ; Ord = '?'
+  ).
+
+% Helper predicate for building keys for lookup 
+terms_int_int_orderKey(X, Y, Z, W, XrW, YrZ, OrderKey) :-
+  term_order(X, Z, XrZ),
+  term_order(Y, W, YrW),
+  atom_chars(OrderKey, [XrZ, XrW, YrZ, YrW]).
+
+% Lookup table for intersecting two closed intervals 
+terms_int_int_lookup(<<><, _, Y, Z, _, [[Z,Y]]).
+terms_int_int_lookup(<<>=, _, Y, Z, _, [[Z,Y]]).
+terms_int_int_lookup(=<><, _, Y, Z, _, [[Z,Y]]).
+terms_int_int_lookup(=<>=, _, Y, Z, _, [[Z,Y]]).
+terms_int_int_lookup(<<>>, _, _, Z, W, [[Z,W]]).
+terms_int_int_lookup(=<>>, _, _, Z, W, [[Z,W]]).
+terms_int_int_lookup(><><, X, Y, _, _, [[X,Y]]).
+terms_int_int_lookup(><>=, X, Y, _, _, [[X,Y]]).
+terms_int_int_lookup(><>>, X, _, _, W, [[X,W]]).
+terms_int_int_lookup(<?>?, _, Y, Z, W, [[Z,W], [Z,Y]]).
+terms_int_int_lookup(=?>?, _, Y, Z, W, [[Z,W], [Z,Y]]).
+terms_int_int_lookup(=???, _, Y, Z, W, [[Z,W], [Z,Y]]).
+terms_int_int_lookup(=<??, _, Y, Z, W, [[Z,W], [Z,Y]]).
+terms_int_int_lookup(><??, X, Y, _, W, [[X,W], [X,Y]]).
+terms_int_int_lookup(?<?=, X, Y, Z, _, [[Z,Y], [X,Y]]).
+terms_int_int_lookup(??><, X, Y, Z, _, [[Z,Y], [X,Y]]).
+terms_int_int_lookup(??>=, X, Y, Z, _, [[Z,Y], [X,Y]]).
+terms_int_int_lookup(???=, X, Y, Z, _, [[Z,Y], [X,Y]]).
+terms_int_int_lookup(?<?>, X, _, Z, W, [[Z,W], [X,W]]).
+terms_int_int_lookup(<<??, _, Y, Z, W, [[Z,W], [Z,Y], singleton(Z), empty]).
+terms_int_int_lookup(<???, _, Y, Z, W, [[Z,W], [Z,Y], singleton(Z), empty]).
+terms_int_int_lookup(>?>?, X, Y, _, W, [[X,W], [X,Y], singleton(X), empty]).
+terms_int_int_lookup(>???, X, Y, _, W, [[X,W], [X,Y], singleton(X), empty]).
+terms_int_int_lookup(?<?<, X, Y, Z, _, [[Z,Y], [X,Y], singleton(Y), empty]).
+terms_int_int_lookup(???<, X, Y, Z, _, [[Z,Y], [X,Y], singleton(Y), empty]).
+terms_int_int_lookup(??>>, X, _, Z, W, [[Z,W], [X,W], singleton(W), empty]).
+terms_int_int_lookup(???>, X, _, Z, W, [[Z,W], [X,W], singleton(W), empty]).
+terms_int_int_lookup(?<??, X, Y, Z, W, [[Z,W], [X,W], [Z,Y], [X,Y], singleton(Y), empty]).
+terms_int_int_lookup(??>?, X, Y, Z, W, [[Z,W], [X,W], [Z,Y], [X,Y], singleton(X), empty]).
+terms_int_int_lookup(????, X, Y, Z, W, [[Z,W], [X,W], [Z,Y], [X,Y], singleton(X), singleton(Y), empty]).
 
 % terms_int_int_intersection(+Xs:list, +Ys:list, -Intersection) is multi.
 %
 % Intersection of two closed intervals.  Input domains must be normalized first to yield correct 
 % answers: see `dom_normalized/2`.
 terms_int_int_intersection([X, Y], [Z, W], Intersection) :-
-  fail.
-
+  term_order(X, W, XrW),
+  term_order(Y, Z, YrZ),
+  (  YrZ = '<'
+  -> Intersection = empty
+  ;  XrW = '>'
+  -> Intersection = empty
+  ;  YrZ = '='
+  -> Intersection = singleton(Y)
+  ;  XrW = '='
+  -> Intersection = singleton(X)
+  ;  terms_int_int_orderKey(X, Y, Z, W, XrW, YrZ, OrderKey),
+     terms_int_int_lookup(OrderKey, X, Y, Z, W, Intersections),
+     member(Intersection, Intersections),
+     % Certain variables must be unified in singleton cases
+     (  (OrderKey = ?<??, Intersection = singleton(variable(Y1)), Z = variable(Z1))
+     -> Y1 = Z1
+     ;  (OrderKey = ??>?, Intersection = singleton(variable(X1)), W = variable(W1))
+     -> X1 = W1
+     ;  OrderKey = ????
+     -> ( Intersection = singleton(X), dif(X, Y), X = variable(X1), W = variable(W1), X1 = W1
+        ; Intersection = singleton(Y), dif(X, Y), Y = variable(Y1), Z = variable(Z1), Y1 = Z1
+        ; dif(Intersection, singleton(X)), dif(Intersection, singleton(Y))
+        )
+     ;  true 
+     )
+  ).
 
 % term_dom_intersection(+Dom1, +Dom2, -Intersection) is multi.
 %
