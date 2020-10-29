@@ -15,12 +15,10 @@
     dom_normalized/2,
     term_at_least/2,
     term_at_most/2,
-    terms_from_from_intersection/3,
-    terms_to_to_intersection/3,
-    terms_from_to_intersection/3,
-    terms_from_int_intersection/3,
-    terms_to_int_intersection/3,
-    terms_int_int_intersection/3,
+    terms_intersection/3,
+    terms_dom_intersection/3,
+    attr_unify_hook/2,
+    attribute_goals/3,
     ($<)/3,
     ($=<)/3,
     ($>)/3,
@@ -42,6 +40,7 @@
   ]).
 
 :- use_module(library(clpfd)).
+:- discontiguous reif_utils:terms_intersection/3.
 
 % Integer representations for booleans
 bool_rep(true, 1).
@@ -313,29 +312,40 @@ $>=(X, Y, Cond) :-
 
 
 % Setup an interval theory for the standard total ordering on terms. The theory consists 
-% of the following subset types:
+% of the following subset families:
 %
-% `all_terms` represents the subset of all terms
+% `all_terms` represents the subset of all terms in the standard ordering
+% `empty` represents the empty subset of terms in the standard ordering
+% `singleton(X)` represents a singleton set of terms in the standard ordering
 % `terms_from(X)` represents the half interval `[X, sup]`
 % `terms_to(Y)` represents the half interval `[inf, Y]`
-% `singleton(X)` represents a singleton set 
 % `[X, Y]` represents a closed interval `[X, Y]` that is not a singleton
-% `empty` represents the empty subset
 %
 % The domain theory permits known-constant interval endpoints of the form `const(-)` as 
 % well as variable endpoints of the form `variable(-)`. Domain intersections with 
 % variable endpoints are non-deterministic.
 
 % term_indomain(-Term, +Dom) is det.
+% term_indomain(-Term, -Dom) is det.
 %
-% True whenever the term `Term` belongs to the term order domain `Dom`.
+% True whenever the term `Term` belongs to the term order domain `Dom`. If `Term` is already 
+% constrained in the standard ordering of terms it is unified with this new constraint.
 term_indomain(Term, Dom) :-
-  del_attr(Term, term_order),
-  put_attr(Term, term_order, Dom).
+  (  nonvar(Term)
+  -> fail
+  ;  var(Dom)
+  -> get_attr(Term, term_order, Dom)
+  ;  (  get_attr(Term, term_order, Dom1)
+     -> terms_dom_intersection(Dom, Dom1, NewDom),
+        put_attr(Term, term_order, NewDom)
+     ;  put_attr(Term, term_order, Dom)
+     )
+  ).
 
 % is_term(-Term) is det. 
 % 
-% True whenever `Term` is a term in the standard ordering for terms.
+% True whenever `Term` is a term in the standard ordering for terms. If `Term` is already constrained in 
+% the standard ordering of terms this new constraint has no effect.
 is_term(Term) :-
   term_indomain(Term, all_terms).
 
@@ -344,7 +354,8 @@ is_term(Term) :-
 %
 % True whenever `Term` is at least as large as `X` in the standard ordering for terms. The term
 % `X` may be a variable, in which case the resulting half-line domain has a variable endpoint
-% that can be instantiated to a constant later.
+% that can be instantiated to a constant later. If `Term` is already constrained in the standard ordering
+% of terms it is unified with this new constraint.
 term_at_least(Term, X) :-
   (  var(X)
   -> term_indomain(Term, terms_from(variable(X)))
@@ -356,7 +367,8 @@ term_at_least(Term, X) :-
 %
 % True whenever `Term` is at most as large as `Y` in the standard ordering for terms. The term
 % `Y` may be a variable, in which case the resulting half-line domain has a variable endpoint
-% that can be instantiated to a constant later.
+% that can be instantiated to a constant later. If `Term` is already constrained in the standard ordering
+% of terms it is unified with this new constraint.
 term_at_most(Term, Y) :-
   (  var(Y)
   -> term_indomain(Term, terms_to(variable(Y)))
@@ -377,7 +389,8 @@ term_normalized(Term0, Term) :-
 % dom_normalized(+Dom0, -Dom) is det.
 %
 % True whenever `Dom` has functors matching `Dom0`s current variable statuses for the relevant
-% endpoint variables, where applicable.
+% endpoint variables, where applicable. This predicate will return incorrect answers when invalid domains
+% (e.g. uninstantiated variables) are passed as arguments.
 dom_normalized(Dom0, Dom) :-
   (  Dom0 = all_terms 
   -> Dom  = Dom0
@@ -399,11 +412,11 @@ dom_normalized(Dom0, Dom) :-
      )
   ).
 
-% terms_from_from_intersection(+X, +Y, -Intersection) is multi.
+% terms_intersection(terms_from(+X), terms_from(+Y), -Intersection) is multi.
 %
 % Intersection of two lower-bounded domains. Input domains must be normalized first to yield
 % correct answers: see `dom_normalized/2`.
-terms_from_from_intersection(X, Y, Intersection) :-
+terms_intersection(terms_from(X), terms_from(Y), Intersection) :-
   (  [X, Y] = [const(X1), const(Y1)] 
   -> (  X1 @>= Y1
      -> Intersection = terms_from(const(X1))
@@ -412,11 +425,11 @@ terms_from_from_intersection(X, Y, Intersection) :-
   ;  (  Intersection = terms_from(X) ; Intersection = terms_from(Y) )
   ).
 
-% terms_to_to_intersection(+X, +Y, -Intersection) is multi.
+% terms_intersection(terms_to(+X), terms_to(+Y), -Intersection) is multi.
 %
 % Intersection of two upper-bounded domains. Input domains must be normalized first to yield
 % correct answers: see `dom_normalized/2`.
-terms_to_to_intersection(X, Y, Intersection) :-
+terms_intersection(terms_to(X), terms_to(Y), Intersection) :-
   (  [X, Y] = [const(X1), const(Y1)] 
   -> (  X1 @=< Y1
      -> Intersection = terms_to(const(X1))
@@ -425,100 +438,33 @@ terms_to_to_intersection(X, Y, Intersection) :-
   ;  (  Intersection = terms_to(X) ; Intersection = terms_to(Y) )
   ).
 
-% terms_from_to_intersection(+X, +Y, -Intersection) is multi.
+% terms_intersection(terms_from(+X), terms_to(+Y), -Intersection) is multi.
 %
 % Intersection of a lower-bounded domain with an upper-bounded domain. Input domains must be 
 % normalized first to yield correct answers: see `dom_normalized/2`.
-terms_from_to_intersection(X, Y, Intersection) :-
+terms_intersection(terms_from(X), terms_to(Y), Intersection) :-
   (  [X, Y] = [const(X1), const(Y1)]
   -> (  X1 == Y1
      -> Intersection = singleton(X)
      ;  X1 @< Y1
      -> Intersection = [X, Y]
-     ;  Intersection = empty 
+     ;  Intersection = empty
      )
-  ; ( (  X = const(_)
-      -> Intersection = singleton(X)
-      ;  Intersection = singleton(Y)
-      )
-      ; Intersection = [X, Y] 
-      ; Intersection = empty 
-    )
+  ;  (  X = const(X1)
+     -> ( arg(1, Y, Y1), Y1 = X1, Intersection = singleton(X) )
+     ;  X = variable(X1)
+     -> ( arg(1, Y, Y1), X1 = Y1, Intersection = singleton(Y) )
+     )
+  ;  Intersection = [X, Y]
+  ;  Intersection = empty
   ).
 
-% terms_from_int_intersection(+X, +Interval:list, -Intersection) is multi.
+% terms_intersection(terms_to(+X), terms_from(+Y), -Intersection) is multi.
 %
-% Intersection of a lower-bounded domain with a closed interval. Input domains must be 
+% Intersection of an upper-bounded domain with a lower-bounded domain. Input domains must be 
 % normalized first to yield correct answers: see `dom_normalized/2`.
-terms_from_int_intersection(X, [Y, Z], Intersection) :-
-  (  [X, Y] = [const(X1), const(Y1)] 
-  -> (  X1 @< Y1
-     -> Intersection = [Y, Z]
-     ;  X1 == Y1
-     -> (  Z = const(Z1)
-        -> (  X1 @< Z1
-           -> Intersection = [Y, Z]
-           ;  Intersection = singleton(Y)
-           )
-        ;  ( Intersection = [Y, Z] ; Intersection = singleton(Y) )
-        )
-     ;  (  Z = const(Z1)
-        -> (  X1 @< Z1
-           -> Intersection = [X, Z]
-           ;  X1 == Z1
-           -> Intersection = singleton(Z)
-           ;  Intersection = empty 
-           )
-        ;  ( Intersection = [X, Z] ; Intersection = singleton(X) ; Intersection = empty )
-        ) 
-     )
-  ;  [X, Z] = [const(X1), const(Z1)] 
-  -> (  X1 @< Z1
-     -> ( Intersection = [Y, Z] ; Intersection = [X, Z] )
-     ;  X1 == Z1
-     -> Intersection = singleton(Z)
-     ;  Intersection = empty 
-     )
-  ;  ( Intersection = [Y, Z] ; 
-       Intersection = [X, Z] ; 
-       (  X = const(_)
-       -> Intersection = singleton(X)
-       ;  Intersection = singleton(Z)
-       ) ;
-       Intersection = empty )
-  ).
-
-% terms_from_int_intersection(+X, +Interval:list, -Intersection) is multi.
-%
-% Intersection of an upper-bounded domain with a closed interval. Input domains must be 
-% normalized first to yield correct answers: see `dom_normalized/2`.
-terms_to_int_intersection(X, [Y, Z], Intersection) :-
-  (  [X, Y] = [const(X1), const(Y1)]
-  -> (  X1 @< Y1
-     -> Intersection = empty 
-     ;  X1 == Y1
-     -> Intersection = singleton(Y)
-     ;  (  Z = const(Z1)
-        -> (  X1 @>= Z1
-           -> Intersection = [Y, Z]
-           ;  Intersection = [Y, X]
-           )
-        ;  ( Intersection = [Y, X] ; Intersection = [Y, Z] )
-        )
-     )
-  ;  [X, Z] = [const(X1), const(Z1)]
-  -> (  X1 @>= Z1
-     -> Intersection = [Y, Z]
-     ;  ( Intersection = [Y, X] ; Intersection = singleton(X) ; Intersection = empty )
-     )
-  ;  (  Intersection = [Y, Z] ;
-        Intersection = [Y, X] ;
-        (  X = const(_)
-        -> Intersection = singleton(X)
-        ;  Intersection = singleton(Y)
-        ) ;
-        Intersection = empty )
-  ).
+terms_intersection(terms_to(X), terms_from(Y), Intersection) :-
+  terms_intersection(terms_from(Y), terms_to(X), Intersection).
 
 % Helper predicate for comparing endpoints
 term_order(X, Y, Ord) :-
@@ -533,7 +479,79 @@ term_order(X, Y, Ord) :-
   ).
 
 % Helper predicate for building keys for lookup 
-terms_int_int_orderKey(X, Y, Z, W, XrW, YrZ, OrderKey) :-
+terms_orderKey(X, Y, Z, OrderKey) :-
+  term_order(X, Y, XrY),
+  term_order(X, Z, XrZ),
+  atom_chars(OrderKey, [XrY, XrZ]).
+
+% Lookup table for intersecting half-interval with closed interval 
+terms_from_int_lookup(??, X, Y, Z, [[Y,Z], [X,Z], singleton(Z), empty]).
+terms_from_int_lookup(?<, X, Y, Z, [[Y,Z], [X,Z]]).
+terms_from_int_lookup(?=, _, _, Z, [singleton(Z)]).
+terms_from_int_lookup(?>, _, _, _, [empty]).
+terms_from_int_lookup(<?, _, Y, Z, [[Y,Z]]).
+terms_from_int_lookup(<<, _, Y, Z, [[Y,Z]]).
+terms_from_int_lookup(=<, _, Y, Z, [[Y,Z]]).
+terms_from_int_lookup(>?, X, _, Z, [[X,Z], singleton(Z), empty]).
+terms_from_int_lookup(><, X, _, Z, [[X,Z]]).
+terms_from_int_lookup(>=, _, _, Z, [singleton(Z)]).
+terms_from_int_lookup(>>, _, _, _, [empty]).
+
+% terms_intersection(terms_from(+X), [+Y, +Z], -Intersection) is multi.
+%
+% Intersection of a lower-bounded domain with a closed interval. Input domains must be 
+% normalized first to yield correct answers: see `dom_normalized/2`.
+terms_intersection(terms_from(X), [Y, Z], Intersection) :-
+  terms_orderKey(X, Y, Z, OrderKey),
+  terms_from_int_lookup(OrderKey, X, Y, Z, Intersections),
+  member(Intersection0, Intersections),
+  (  member(OrderKey, [??, >?]), Intersection0 = singleton(Z)
+  -> arg(1, X, X1), arg(1, Z, Z1), X1 = Z1, dom_normalized(Intersection0, Intersection)
+  ;  Intersection = Intersection0
+  ).
+
+% terms_intersection([+X, +Y], terms_from(+Z), -Intersection) is multi.
+%
+% Intersection of a closed interval with a lower-bounded domain. Input domains must be 
+% normalized first to yield correct answers: see `dom_normalized/2`.
+terms_intersection([X, Y], terms_from(Z), Intersection) :-
+  terms_intersection(terms_from(Z), [X, Y], Intersection).
+
+% Lookup table for intersecting half-interval with closed interval 
+terms_to_int_lookup(??, X, Y, Z, [[Y,Z], [Y,X], singleton(Y), empty]).
+terms_to_int_lookup(?<, X, Y, _, [[Y,X], singleton(Y), empty]).
+terms_to_int_lookup(?=, _, Y, Z, [[Y,Z]]).
+terms_to_int_lookup(?>, _, Y, Z, [[Y,Z]]).
+terms_to_int_lookup(<?, _, _, _, [empty]).
+terms_to_int_lookup(<<, _, _, _, [empty]).
+terms_to_int_lookup(=<, _, Y, _, [singleton(Y)]).
+terms_to_int_lookup(>?, X, Y, Z, [[Y,X], [Y,Z]]).
+terms_to_int_lookup(><, X, Y, _, [[Y,X]]).
+terms_to_int_lookup(>=, _, Y, Z, [[Y,Z]]).
+terms_to_int_lookup(>>, _, Y, Z, [[Y,Z]]).
+
+% terms_intersection(terms_to(+X), [+Y, +Z], -Intersection) is multi.
+%
+% Intersection of an upper-bounded domain with a closed interval. Input domains must be 
+% normalized first to yield correct answers: see `dom_normalized/2`.
+terms_intersection(terms_to(X), [Y, Z], Intersection) :-
+  terms_orderKey(X, Y, Z, OrderKey),
+  terms_to_int_lookup(OrderKey, X, Y, Z, Intersections),
+  member(Intersection0, Intersections),
+  (  member(OrderKey, [??, ?<]), Intersection0 = singleton(Y)
+  -> arg(1, X, X1), arg(1, Y, Y1), X1 = Y1, dom_normalized(Intersection0, Intersection)
+  ;  Intersection = Intersection0
+  ).
+
+% terms_intersection([+X, +Y], terms_to(+Z), -Intersection) is multi.
+%
+% Intersection of an upper-bounded domain with a closed interval. Input domains must be 
+% normalized first to yield correct answers: see `dom_normalized/2`.
+terms_intersection([X, Y], terms_to(Z), Intersection) :-
+  terms_intersection(terms_to(Z), [X, Y], Intersection).
+
+% Helper predicate for building keys for lookup 
+terms_orderKey(X, Y, Z, W, XrW, YrZ, OrderKey) :-
   term_order(X, Z, XrZ),
   term_order(Y, W, YrW),
   atom_chars(OrderKey, [XrZ, XrW, YrZ, YrW]).
@@ -570,11 +588,11 @@ terms_int_int_lookup(?<??, X, Y, Z, W, [[Z,W], [X,W], [Z,Y], [X,Y], singleton(Y)
 terms_int_int_lookup(??>?, X, Y, Z, W, [[Z,W], [X,W], [Z,Y], [X,Y], singleton(X), empty]).
 terms_int_int_lookup(????, X, Y, Z, W, [[Z,W], [X,W], [Z,Y], [X,Y], singleton(X), singleton(Y), empty]).
 
-% terms_int_int_intersection(+Xs:list, +Ys:list, -Intersection) is multi.
+% terms_intersection([+X, +Y], [+Z, +W], -Intersection) is multi.
 %
 % Intersection of two closed intervals.  Input domains must be normalized first to yield correct 
 % answers: see `dom_normalized/2`.
-terms_int_int_intersection([X, Y], [Z, W], Intersection) :-
+terms_intersection([X, Y], [Z, W], Intersection) :-
   term_order(X, W, XrW),
   term_order(Y, Z, YrZ),
   (  YrZ = '<'
@@ -585,78 +603,120 @@ terms_int_int_intersection([X, Y], [Z, W], Intersection) :-
   -> Intersection = singleton(Y)
   ;  XrW = '='
   -> Intersection = singleton(X)
-  ;  terms_int_int_orderKey(X, Y, Z, W, XrW, YrZ, OrderKey),
+  ;  terms_orderKey(X, Y, Z, W, XrW, YrZ, OrderKey),
      terms_int_int_lookup(OrderKey, X, Y, Z, W, Intersections),
-     member(Intersection, Intersections),
-     % Certain variables must be unified in singleton cases
-     (  (OrderKey = ?<??, Intersection = singleton(variable(Y1)), Z = variable(Z1))
-     -> Y1 = Z1
-     ;  (OrderKey = ??>?, Intersection = singleton(variable(X1)), W = variable(W1))
-     -> X1 = W1
-     ;  OrderKey = ????
-     -> ( Intersection = singleton(X), dif(X, Y), X = variable(X1), W = variable(W1), X1 = W1
-        ; Intersection = singleton(Y), dif(X, Y), Y = variable(Y1), Z = variable(Z1), Y1 = Z1
-        ; dif(Intersection, singleton(X)), dif(Intersection, singleton(Y))
-        )
-     ;  true 
+     member(Intersection0, Intersections),
+     (  member(OrderKey, [<<??, <???]), Intersection0 = singleton(Z)
+     -> arg(1, Y, Y1), arg(1, Z, Z1), Y1 = Z1, dom_normalized(Intersection0, Intersection)
+     ;  member(OrderKey, [>?>?, >???, ??>?]), Intersection0 = singleton(X)
+     -> arg(1, X, X1), arg(1, W, W1), X1 = W1, dom_normalized(Intersection0, Intersection)
+     ;  member(OrderKey, [?<?<, ?<??, ???<]), Intersection0 = singleton(Y)
+     -> arg(1, Y, Y1), arg(1, Z, Z1), Y1 = Z1, dom_normalized(Intersection0, Intersection)
+     ;  member(OrderKey, [??>>, ???>]), Intersection0 = singleton(W)
+     -> arg(1, X, X1), arg(1, W, W1), X1 = W1, dom_normalized(Intersection0, Intersection)
+     ;  OrderKey = ????, Intersection0 = singleton(X), dif(X, Y)
+     -> arg(1, X, X1), arg(1, W, W1), X1 = W1, dom_normalized(Intersection0, Intersection)
+     ;  OrderKey = ????, Intersection0 = singleton(Y)
+     -> arg(1, Y, Y1), arg(1, Z, Z1), Y1 = Z1, dom_normalized(Intersection0, Intersection)
+     ;  Intersection = Intersection0
      )
   ).
 
-% term_dom_intersection(+Dom1, +Dom2, -Intersection) is multi.
+% terms_dom_intersection(+Dom1, +Dom2, -Intersection) is multi.
 %
 % Intersection of any two term domains for the standard ordering on terms. Domains are normalized
-% first before the intersection is computed.
-term_dom_intersection(Dom1, Dom2, Intersection) :-
-  (  Dom1 == all_terms
-  -> Intersection = Dom2
-  ;  Dom2 == all_terms
-  -> Intersection = Dom1
-  ;  Dom1 = terms_from(X)
-  -> (  Dom2 = terms_from(Y)
-     -> terms_from_from_intersection(X, Y, Intersection) 
-     ;  Dom2 = terms_to(Y)
-     -> terms_from_to_intersection(X, Y, Intersection) 
-     ;  Dom2 = terms_int([Y, Z])
-     -> terms_from_int_intersection(X, [Y, Z], Intersection)
-     )
-  ;  Dom1 = terms_to(X)
-  -> (  Dom2 = terms_from(Y)
-     -> terms_from_to_intersection(Y, X, Intersection)
-     ;  Dom2 = terms_to(Y)
-     -> terms_to_to_intersection(X, Y, Intersection)
-     ;  Dom2 = terms_int([Y, Z])
-     -> fail
-     )
-  ;  Dom1 = terms_int([X, Y])
-  -> (  Dom2 = terms_from(Z)
-     -> terms_from_int_intersection(Z, [X, Y], Intersection) 
-     ;  Dom2 = terms_to(Z)
-     -> fail
-     ;  Dom2 = terms_int([Z, W])
-     -> fail
-     )
+% first before the intersection is computed. This predicate will return incorrect answers 
+% when invalid domains (e.g. uninstantiated variables) are passed as arguments.
+terms_dom_intersection(Dom1, Dom2, Intersection) :-
+  dom_normalized(Dom1, NewDom1),
+  dom_normalized(Dom2, NewDom2),
+  (  NewDom1 = all_terms
+  -> Intersection = NewDom2
+  ;  NewDom2 = all_terms
+  -> Intersection = NewDom1
+  ; terms_intersection(NewDom1, NewDom2, Intersection)
   ).
+  
+% term_singleton_singleton_intersection(+X, +Y, -Intersection) is det.
+%
+% Intersection of two singletons.  Input domains must be normalized first to yield correct 
+% answers: see `dom_normalized/2`.
+%terms_singleton_singleton_intersection(X, Y, Intersection) :-
+%  (  ( X = const(X1), (Y = const(Y1) ; Y = variable(Y1)) )
+%  -> (  X1 = Y1
+%     -> Intersection = singleton(X)
+%     ;  Intersection = empty
+%     )
+%  ;  ( X = variable(X1), (Y = const(Y1) ; Y = variable(Y1)) )
+%  -> (  X1 = Y1
+%     -> Intersection = singleton(Y)
+%     ;  Intersection = empty
+%     )
+%  ).
 
-%attr_unify_hook(Dom1, Term2) :-
-  %(  get_attr(Term2, terms_in, Dom2) % Term2 is already attributed
-  %-> term_dom_intersection(Dom1, Dom2, NewDom),
-     %(  NewDom == []
-     %-> fail
-     %;  NewDom = [Value]
-     %-> Term2 = Value
-     %;  put_attr(Term2, terms_in, NewDom)
+% term_singleton_from_intersection(+X, +Y, -Intersection) is det.
+%
+% Intersection of a singleton with a lower-bounded half-line. Input domains must be normalized 
+% first to yield correct answers: see `dom_normalized/2`.
+%terms_singleton_from_intersection(X, Y, Intersection) :-
+  %(  X = const(X1)
+  %-> (  Y = const(Y1)
+     %-> (  X1 @< Y1
+        %-> Intersection = empty
+        %;  Intersection = singleton(X)
+        %)
+     %;  ( Intersection = singleton(X) ; Intersection = empty )
      %)
-   %;  var(Term2)             % Term2 is not already attributed, but is a variable
-   %-> put_attr(Term2, terms_in, Dom1)
-   %;  (  Dom1 == all_terms   % Term2 is not a variable, so check if it belongs to Dom1
-      %-> true
-      %;  Dom1 = [X, Y],
-         %X @=< Term2,
-         %Term2 @=< Y
-      %)
+  %;  ( Intersection = singleton(X) ; Intersection = empty )
   %).
 
+% term_singleton_to_intersection(+X, +Y, -Intersection) is det.
+%
+% Intersection of a singleton with an upper-bounded half-line. Input domains must be normalized 
+% first to yield correct answers: see `dom_normalized/2`.
+%terms_singleton_to_intersection(X, Y, Intersection) :-
+  %(  X = const(X1)
+  %-> (  Y = const(Y1)
+     %-> (  X1 @> Y1
+        %-> Intersection = empty
+        %;  Intersection = singleton(X)
+        %)
+     %;  ( Intersection = singleton(X) ; Intersection = empty )
+     %)
+  %;  ( Intersection = singleton(X) ; Intersection = empty )
+  %).
+
+% terms_singleton_int_intersection(+X, [+Y, +Z], -Intersection) is det.
+%
+% Intersection of a singleton with a closed interval. Input domains must be normalized 
+% first to yield correct answers: see `dom_normalized/2`.
+%terms_singleton_int_intersection(_, _, _) :-
+  %fail.
+
+% Hook for term unification in the new "term_order" domain 
+attr_unify_hook(Dom1, Term2) :-
+  (  get_attr(Term2, term_order, Dom2)      % Term2 is already attributed
+  -> terms_dom_intersection(Dom1, Dom2, NewDom),
+     (  NewDom == empty                     % Fail to unify if resulting domain is empty
+     -> fail
+     ;  NewDom = singleton(Value)           % New domain is a singleton, so delete attribute and unify normally 
+     -> arg(1, Value, Value1),
+        del_attr(Term2, term_order),
+        Term2 = Value1
+     ;  put_attr(Term2, term_order, NewDom) % Otherwise, just set the new domain
+     )
+  %;  var(Term2)                             % Term2 is not already attributed, but is a variable, so
+  %-> put_attr(Term2, term_order, Dom1)      % set the domain upon unifying
+  %;  (  Dom1 == all_terms                   % Term2 is not a variable, so check if it belongs to Dom1
+     %-> true 
+     %;  Dom1 = [X, Y],
+        %X @=< Term2,
+        %Term2 @=< Y
+     %)
+  ).
+
 attribute_goals(Term) -->
-  { get_attr(Term, term_order, Domain) },
-  [term_in(Term, Domain)].
+  { get_attr(Term, term_order, Dom0) },
+  { dom_normalized(Dom0, Dom1) },
+  [term_in(Term, Dom1)].
 
