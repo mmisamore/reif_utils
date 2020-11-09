@@ -406,8 +406,10 @@ dom_normalized(Dom0, Dom) :-
   ;  Dom0 = [TermX0, TermY0]
   -> term_normalized(TermX0, TermX),
      term_normalized(TermY0, TermY),
-     (  [TermX, TermY] = [const(A), const(A)]
-     -> Dom = singleton(TermX)
+     (  [TermX, TermY] = [const(Same), const(Same)]
+     -> Dom = singleton(const(Same))
+     ;  [TermX, TermY] = [variable(TermX2), variable(TermY2)], TermX2 == TermY2
+     -> Dom = singleton(variable(TermX2))
      ;  Dom  = [TermX, TermY]
      )
   ).
@@ -634,65 +636,42 @@ terms_dom_intersection(Dom1, Dom2, Intersection) :-
   -> Intersection = NewDom2
   ;  NewDom2 = all_terms
   -> Intersection = NewDom1
-  ; terms_intersection(NewDom1, NewDom2, Intersection)
+  ;  NewDom1 = terms_from(X), NewDom2 = singleton(Y)
+  -> (  X = const(X1), Y = const(Y1), X1 @=< Y1 
+     -> Intersection = singleton(Y)
+     ;  ( Intersection = singleton(Y) ; Intersection = empty )
+     )
+  ;  NewDom1 = terms_to(X), NewDom2 = singleton(Y)
+  -> (  X = const(X1), Y = const(Y1), X1 @>= Y1
+     -> Intersection = singleton(Y)
+     ;  ( Intersection = singleton(Y) ; Intersection = empty )
+     )
+  ;  NewDom1 = [X, Y], NewDom2 = singleton(Z)
+  -> (  X = const(X1), Y = const(Y1), Z = const(Z1), X1 @=< Z1, Z1 @=< Y1
+     -> Intersection = singleton(Z)
+     ;  ( Intersection = singleton(Z) ; Intersection = empty ) 
+     )
+  ;  NewDom1 = singleton(X), NewDom2 = singleton(Y)
+  -> (  X = const(X1), Y = const(Y1), X1 = Y1
+     -> Intersection = singleton(X)
+     ;  X = const(X1), Y = variable(Y1)
+     -> ( Intersection = singleton(X), X1 = Y1
+        ; Intersection = empty 
+        )
+     ;  X = variable(X1), Y = const(Y1)
+     -> ( Intersection = singleton(Y), X1 = Y1 
+        ; Intersection = empty 
+        )
+     ;  X = variable(X1), Y = variable(Y1)
+     -> (  Intersection = singleton(X1), X1 = Y1 
+        ;  Intersection = empty 
+        )
+     )
+  ;  NewDom1 = singleton(_), member(NewDom2, [terms_from(_), terms_to(_), [_,_]])
+  -> terms_dom_intersection(Dom2, Dom1, Intersection)
+  ;  terms_intersection(NewDom1, NewDom2, Intersection)
   ).
   
-% term_singleton_singleton_intersection(+X, +Y, -Intersection) is det.
-%
-% Intersection of two singletons.  Input domains must be normalized first to yield correct 
-% answers: see `dom_normalized/2`.
-%terms_singleton_singleton_intersection(X, Y, Intersection) :-
-%  (  ( X = const(X1), (Y = const(Y1) ; Y = variable(Y1)) )
-%  -> (  X1 = Y1
-%     -> Intersection = singleton(X)
-%     ;  Intersection = empty
-%     )
-%  ;  ( X = variable(X1), (Y = const(Y1) ; Y = variable(Y1)) )
-%  -> (  X1 = Y1
-%     -> Intersection = singleton(Y)
-%     ;  Intersection = empty
-%     )
-%  ).
-
-% term_singleton_from_intersection(+X, +Y, -Intersection) is det.
-%
-% Intersection of a singleton with a lower-bounded half-line. Input domains must be normalized 
-% first to yield correct answers: see `dom_normalized/2`.
-%terms_singleton_from_intersection(X, Y, Intersection) :-
-  %(  X = const(X1)
-  %-> (  Y = const(Y1)
-     %-> (  X1 @< Y1
-        %-> Intersection = empty
-        %;  Intersection = singleton(X)
-        %)
-     %;  ( Intersection = singleton(X) ; Intersection = empty )
-     %)
-  %;  ( Intersection = singleton(X) ; Intersection = empty )
-  %).
-
-% term_singleton_to_intersection(+X, +Y, -Intersection) is det.
-%
-% Intersection of a singleton with an upper-bounded half-line. Input domains must be normalized 
-% first to yield correct answers: see `dom_normalized/2`.
-%terms_singleton_to_intersection(X, Y, Intersection) :-
-  %(  X = const(X1)
-  %-> (  Y = const(Y1)
-     %-> (  X1 @> Y1
-        %-> Intersection = empty
-        %;  Intersection = singleton(X)
-        %)
-     %;  ( Intersection = singleton(X) ; Intersection = empty )
-     %)
-  %;  ( Intersection = singleton(X) ; Intersection = empty )
-  %).
-
-% terms_singleton_int_intersection(+X, [+Y, +Z], -Intersection) is det.
-%
-% Intersection of a singleton with a closed interval. Input domains must be normalized 
-% first to yield correct answers: see `dom_normalized/2`.
-%terms_singleton_int_intersection(_, _, _) :-
-  %fail.
-
 % Hook for term unification in the new "term_order" domain 
 attr_unify_hook(Dom1, Term2) :-
   (  get_attr(Term2, term_order, Dom2)      % Term2 is already attributed

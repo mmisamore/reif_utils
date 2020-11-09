@@ -2345,6 +2345,11 @@ test('is_term_-_get') :-
   is_term(Term),
   get_attr(Term, term_order, all_terms).
 
+test('is_term_-_already_constrained') :-
+  term_indomain(Term, terms_from(const(42))),
+  is_term(Term),
+  get_attr(Term, term_order, terms_from(const(42))).
+
 
 % Tests for term_at_least
 test('term_at_least_-_+') :-
@@ -2355,6 +2360,11 @@ test('term_at_least_-_-') :-
   term_at_least(Term, X),
   get_attr(Term, term_order, terms_from(variable(X))).
 
+test('term_at_least_-_+_already_constrained', [ nondet ]) :-
+  term_at_least(Term, x),
+  term_at_least(Term, y),
+  get_attr(Term, term_order, terms_from(const(y))).
+
 
 % Tests for term_at_most
 test('term_at_most_-_+') :-
@@ -2364,6 +2374,11 @@ test('term_at_most_-_+') :-
 test('term_at_most_-_-') :-
   term_at_most(Term, Y),
   get_attr(Term, term_order, terms_to(variable(Y))).
+
+test('term_at_most_-_+_already_constrained', [ nondet ]) :-
+  term_at_most(Term, y),
+  term_at_most(Term, x),
+  get_attr(Term, term_order, terms_to(const(x))).
 
 
 % Tests for term_normalized
@@ -2632,6 +2647,10 @@ test('dom_normalized_interval_+_+_v2c_v2c_sing') :-
   X = a, Y = a,
   dom_normalized([variable(X), variable(Y)], singleton(const(a))).
 
+test('dom_normalized_interval_+_+_v_v_eq_sing') :-
+  X = Y, 
+  dom_normalized([variable(X), variable(Y)], singleton(variable(X))).
+
 test('dom_normalized_interval_+_-_c_c_sing') :-
   dom_normalized([const(a), const(a)], Dom),
   Dom = singleton(const(a)).
@@ -2651,12 +2670,17 @@ test('dom_normalized_interval_+_-_v2c_v2c_sing') :-
   dom_normalized([variable(X), variable(Y)], Dom),
   Dom = singleton(const(a)).
 
+test('dom_normalized_interval_+_-_v_v_eq_sing') :-
+  X = Y,
+  dom_normalized([variable(X), variable(Y)], Dom),
+  Dom = singleton(variable(X)).
+
 
 % Tests for terms_intersection (from-from case)
-test('terms_from_from_intersection_c_c_>=', [nondet]) :-
+test('terms_from_from_intersection_c_c_>=', [ nondet ]) :-
   terms_intersection(terms_from(const(y)), terms_from(const(x)), terms_from(const(y))).
 
-test('terms_from_from_intersection_c_c_<', [nondet]) :-
+test('terms_from_from_intersection_c_c_<', [ nondet ]) :-
   terms_intersection(terms_from(const(x)), terms_from(const(y)), terms_from(const(y))).
 
 test('terms_from_from_intersection_c_v') :-
@@ -2673,10 +2697,10 @@ test('terms_from_from_intersection_v_v') :-
 
 
 % Tests for terms_intersection (to-to case)
-test('terms_to_to_intersection_c_c_>=', [nondet]) :-
+test('terms_to_to_intersection_c_c_>=', [ nondet ]) :-
   terms_intersection(terms_to(const(y)), terms_to(const(x)), terms_to(const(x))).
 
-test('terms_to_to_intersection_c_c_<', [nondet]) :-
+test('terms_to_to_intersection_c_c_<', [ nondet ]) :-
   terms_intersection(terms_to(const(x)), terms_to(const(y)), terms_to(const(x))).
 
 test('terms_to_to_intersection_c_v') :-
@@ -2693,20 +2717,20 @@ test('terms_to_to_intersection_v_v') :-
 
 
 % Tests for terms_intersection (from-to case)
-test('terms_from_to_intersection_c_c_=', [nondet]) :-
+test('terms_from_to_intersection_c_c_=', [ nondet ]) :-
   terms_intersection(terms_from(const(x)), terms_to(const(x)), singleton(const(x))).
 
-test('terms_from_to_intersection_c_c_<', [nondet]) :-
+test('terms_from_to_intersection_c_c_<', [ nondet ]) :-
   terms_intersection(terms_from(const(x)), terms_to(const(y)), [const(x), const(y)]).
 
-test('terms_from_to_intersection_c_c_>', [nondet]) :-
+test('terms_from_to_intersection_c_c_>', [ nondet ]) :-
   terms_intersection(terms_from(const(y)), terms_to(const(x)), empty).
 
 test('terms_from_to_intersection_c_v') :-
   findall(Intersection, terms_intersection(terms_from(const(x)), terms_to(variable(Y)), Intersection), Ans),
   Ans = [singleton(const(x)), [const(x), variable(Y)], empty].
 
-test('terms_from_to_intersection_c_v_unified', [nondet]) :-
+test('terms_from_to_intersection_c_v_unified', [ nondet ]) :-
   terms_intersection(terms_from(const(x)), terms_to(variable(Y)), singleton(const(x))),
   Y == x.
 
@@ -2714,7 +2738,7 @@ test('terms_from_to_intersection_v_c') :-
   findall(Intersection, terms_intersection(terms_from(variable(X)), terms_to(const(y)), Intersection), Ans),
   Ans = [singleton(const(y)), [variable(X), const(y)], empty].
 
-test('terms_from_to_intersection_v_c_unified', [nondet]) :-
+test('terms_from_to_intersection_v_c_unified', [ nondet ]) :-
   terms_intersection(terms_from(variable(X)), terms_to(const(y)), singleton(const(y))), 
   X == y.
 
@@ -2722,13 +2746,13 @@ test('terms_from_to_intersection_v_v') :-
   findall(Intersection, terms_intersection(terms_from(variable(X)), terms_to(variable(Y)), Intersection), Ans),
   Ans = [singleton(variable(X)), [variable(X), variable(Y)], empty].
 
-test('terms_from_to_intersection_v_v_unified', [nondet]) :-
+test('terms_from_to_intersection_v_v_unified', [ nondet ]) :-
   terms_intersection(terms_from(variable(X)), terms_to(variable(Y)), singleton(variable(X))),
   X == Y.
 
 
 % Tests for terms_intersection (to-from case)
-test('terms_to_from_intersection_agrees_with_from_to', [nondet]) :-
+test('terms_to_from_intersection_agrees_with_from_to', [ nondet ]) :-
   terms_intersection(terms_to(variable(X)), terms_from(variable(Y)), Intersection),
   terms_intersection(terms_from(variable(Y)), terms_to(variable(X)), Intersection).
 
@@ -2753,7 +2777,7 @@ test('terms_from_int_intersection_?_?') :-
     Ans),
   Ans = [[variable(Y), variable(Z)], [const(a), variable(Z)], singleton(const(a)), empty].
 
-test('terms_from_int_intersection_?_?_unified', [nondet]) :-
+test('terms_from_int_intersection_?_?_unified', [ nondet ]) :-
   terms_intersection(terms_from(const(a)), [variable(_), variable(Z)], singleton(const(a))),
   Z == a.
 
@@ -2786,7 +2810,7 @@ test('terms_from_int_intersection_>_?') :-
     Ans),
   Ans = [[const(b), variable(Z)], singleton(const(b)), empty].
 
-test('terms_from_int_intersection_>_?_unified', [nondet]) :-
+test('terms_from_int_intersection_>_?_unified', [ nondet ]) :-
   terms_intersection(terms_from(const(b)), [const(a), variable(Z)], singleton(const(b))),
   Z == b.
 
@@ -2801,7 +2825,7 @@ test('terms_from_int_intersection_>_>') :-
 
 
 % Tests for terms_intersection (int-from case)
-test('terms_int_from_intersection_agrees_with_from_int', [nondet]) :-
+test('terms_int_from_intersection_agrees_with_from_int', [ nondet ]) :-
     terms_intersection([X, Y], terms_from(Z), Intersection),
     terms_intersection(terms_from(Z), [X, Y], Intersection).
 
@@ -2825,7 +2849,7 @@ test('terms_to_int_intersection_?_?') :-
     Ans),
   Ans = [[variable(Y), variable(Z)], [variable(Y), const(a)], singleton(const(a)), empty].
 
-test('terms_to_int_intersection_?_?_unified', [nondet]) :-
+test('terms_to_int_intersection_?_?_unified', [ nondet ]) :-
   terms_intersection(terms_to(const(a)), [variable(Y), variable(_)], singleton(const(a))),
   Y == a.
 
@@ -2836,7 +2860,7 @@ test('terms_to_int_intersection_?_<') :-
     Ans),
   Ans = [[variable(Y), const(a)], singleton(const(a)), empty].
 
-test('terms_to_int_intersection_?_<_unified', [nondet]) :-
+test('terms_to_int_intersection_?_<_unified', [ nondet ]) :-
   terms_intersection(terms_to(const(a)), [variable(Y), const(c)], singleton(const(a))),
   Y == a.
 
@@ -2873,7 +2897,7 @@ test('terms_to_int_intersection_>_>') :-
 
 
 % Tests for terms_intersection (int-to case)
-test('terms_int_to_intersection_agrees_with_to_int', [nondet]) :-
+test('terms_int_to_intersection_agrees_with_to_int', [ nondet ]) :-
   terms_intersection([X, Y], terms_to(Z), Intersection),
   terms_intersection(terms_to(Z), [X, Y], Intersection).
 
@@ -2918,7 +2942,7 @@ test('terms_int_int_intersection_<_<_?_?') :-
     Ans),
   Ans = [[const(b), const(c)], [const(b), variable(Y)], singleton(const(b)), empty].
 
-test('terms_int_int_intersection_<_<_?_?_unified', [nondet]) :-
+test('terms_int_int_intersection_<_<_?_?_unified', [ nondet ]) :-
   terms_intersection([const(a), variable(Y)], [const(b), const(c)], singleton(const(b))),
   Y == b.
 
@@ -2940,7 +2964,7 @@ test('terms_int_int_intersection_<_?_?_?') :-
     Ans),
   Ans = [[const(c), variable(W)], [const(c), variable(Y)], singleton(const(c)), empty].
 
-test('terms_int_int_intersection_<_?_?_?_unified', [nondet]) :-
+test('terms_int_int_intersection_<_?_?_?_unified', [ nondet ]) :-
   terms_intersection([const(a), variable(Y)], [const(c), variable(_)], singleton(const(c))),
   Y == c.
 
@@ -3015,7 +3039,7 @@ test('terms_int_int_intersection_>_?_>_?') :-
     Ans),
   Ans = [[const(b), variable(W)], [const(b), const(c)], singleton(const(b)), empty].
 
-test('terms_int_int_intersection_>_?_>_?_unified', [nondet]) :-
+test('terms_int_int_intersection_>_?_>_?_unified', [ nondet ]) :-
   terms_intersection([const(b), const(c)], [const(a), variable(W)], singleton(const(b))),
   W == b.
 
@@ -3028,7 +3052,7 @@ test('terms_int_int_intersection_>_?_?_?') :-
     Ans),
   Ans = [[const(c), variable(W)], [const(c), variable(Y)], singleton(const(c)), empty].
 
-test('terms_int_int_intersection_>_?_?_?_unified', [nondet]) :-
+test('terms_int_int_intersection_>_?_?_?_unified', [ nondet ]) :-
   terms_intersection([const(c), variable(_)], [const(a), variable(W)], singleton(const(c))),
   W == c.
 
@@ -3045,7 +3069,7 @@ test('terms_int_int_intersection_?_<_?_<') :-
     Ans),
   Ans = [[variable(Z), const(b)], [const(a), const(b)], singleton(const(b)), empty].
 
-test('terms_int_int_intersection_?_<_?_<_unified', [nondet]) :-
+test('terms_int_int_intersection_?_<_?_<_unified', [ nondet ]) :-
   terms_intersection([const(a), const(b)], [variable(Z), const(d)], singleton(const(b))),
   Z == b.
 
@@ -3071,7 +3095,7 @@ test('terms_int_int_intersection_?_<_?_?') :-
   Ans = [[variable(Z), const(b)], [const(a), const(b)], [variable(Z), variable(Y)],
          [const(a), variable(Y)], singleton(variable(Y)), empty].
 
-test('terms_int_int_intersection_?_<_?_?_v', [nondet]) :-
+test('terms_int_int_intersection_?_<_?_?_v', [ nondet ]) :-
   terms_intersection([const(a), variable(Y)], [variable(Z), const(b)], singleton(variable(Y))),
   Y == Z.
 
@@ -3102,7 +3126,7 @@ test('terms_int_int_intersection_?_?_>_>') :-
     Ans),
   Ans = [[const(b), const(c)], [variable(X), const(c)], singleton(const(c)), empty].
 
-test('terms_int_int_intersection_?_?_>_>_X==c', [nondet]) :-
+test('terms_int_int_intersection_?_?_>_>_X==c', [ nondet ]) :-
   terms_intersection([variable(X), const(d)], [const(b), const(c)], singleton(const(c))),
   X == c.
 
@@ -3114,7 +3138,7 @@ test('terms_int_int_intersection_?_?_>_?') :-
   Ans = [[const(b), variable(W)], [variable(X), variable(W)], [const(b), const(c)],
          [variable(X), const(c)], singleton(variable(X)), empty].
 
-test('terms_int_int_intersection_?_?_>_?_v', [nondet]) :-
+test('terms_int_int_intersection_?_?_>_?_v', [ nondet ]) :-
   terms_intersection([variable(X), const(c)], [const(b), variable(W)], singleton(variable(X))),
   X == W.
 
@@ -3131,7 +3155,7 @@ test('terms_int_int_intersection_?_?_?_<') :-
     Ans),
   Ans = [[variable(X), const(b)], [variable(Z), const(b)], singleton(const(b)), empty].
 
-test('terms_int_int_intersection_?_?_?_<_Z==b', [nondet]) :-
+test('terms_int_int_intersection_?_?_?_<_Z==b', [ nondet ]) :-
   terms_intersection([variable(_), const(b)], [variable(Z), const(d)], singleton(const(b))),
   Z == b.
 
@@ -3149,7 +3173,7 @@ test('terms_int_int_intersection_?_?_?_>') :-
     Ans),
   Ans = [[variable(Z), const(b)], [variable(X), const(b)], singleton(const(b)), empty].
 
-test('terms_int_int_intersection_?_?_?_>_X==b', [nondet]) :-
+test('terms_int_int_intersection_?_?_?_>_X==b', [ nondet ]) :-
   terms_intersection([variable(X), const(d)], [variable(_), const(b)], singleton(const(b))),
   X == b.
 
@@ -3161,175 +3185,13 @@ test('terms_int_int_intersection_?_?_?_?') :-
   Ans = [[variable(Z), variable(W)], [variable(X), variable(W)], [variable(Z), variable(Y)],
          [variable(X), variable(Y)], singleton(variable(X)), singleton(variable(Y)), empty].
 
-test('terms_int_int_intersection_?_?_?_?_x==w', [nondet]) :-
+test('terms_int_int_intersection_?_?_?_?_x==w', [ nondet ]) :-
   terms_intersection([variable(X), variable(_)], [variable(_), variable(W)], singleton(variable(X))),
   X == W.
 
-test('terms_int_int_intersection_?_?_?_?_y==z', [nondet]) :-
+test('terms_int_int_intersection_?_?_?_?_y==z', [ nondet ]) :-
   terms_intersection([variable(_), variable(Y)], [variable(Z), variable(_)], singleton(variable(Y))),
   Y == Z.
-
-
-% Tests for terms_singleton_singleton_intersection
-%test('terms_singleton_singleton_intersection_c_c_equal') :-
-  %terms_singleton_singleton_intersection(const(a), const(a), singleton(const(a))).
-
-%test('terms_singleton_singleton_intersection_c_c_unequal') :-
-  %terms_singleton_singleton_intersection(const(a), const(b), empty).
-
-%test('terms_singleton_singleton_intersection_c_v_equal') :-
-  %terms_singleton_singleton_intersection(const(a), variable(Y), singleton(const(a))),
-  %Y == a.
-
-%test('terms_singleton_singleton_intersection_c_v_unequal') :-
-  %dif(Y, a),
-  %terms_singleton_singleton_intersection(const(a), variable(Y), empty).
-
-%test('terms_singleton_singleton_intersection_v_c_equal') :-
-  %terms_singleton_singleton_intersection(variable(X), const(b), singleton(const(b))),
-  %X == b.
-
-%test('terms_singleton_singleton_intersection_v_c_unequal') :-
-  %dif(X, b),
-  %terms_singleton_singleton_intersection(variable(X), const(b), empty).
-
-%test('terms_singleton_singleton_intersection_v_v_equal') :-
-  %terms_singleton_singleton_intersection(variable(X), variable(Y), singleton(variable(X))),
-  %X == Y.
-
-%test('terms_singleton_singleton_intersection_v_v_unequal') :-
-  %dif(X, Y),
-  %terms_singleton_singleton_intersection(variable(X), variable(Y), empty).
-
-
-% Tests for terms_singleton_from_intersection
-%test('terms_singleton_from_intersection_c_c_equal') :-
-  %terms_singleton_from_intersection(const(a), const(a), singleton(const(a))).
-
-%test('terms_singleton_from_intersection_c_c_lt') :-
-  %terms_singleton_from_intersection(const(a), const(b), empty).
-
-%test('terms_singleton_from_intersection_c_c_gt') :-
-  %terms_singleton_from_intersection(const(b), const(a), singleton(const(b))).
-
-%test('terms_singleton_from_intersection_c_v') :-
-  %findall(
-    %Intersection,
-    %terms_singleton_from_intersection(const(a), variable(_), Intersection),
-    %Ans),
-  %Ans = [singleton(const(a)), empty].
-
-%test('terms_singleton_from_intersection_v_c') :-
-  %findall(
-    %Intersection,
-    %terms_singleton_from_intersection(variable(X), const(b), Intersection),
-    %Ans),
-  %Ans = [singleton(variable(X)), empty].
-
-%test('terms_singleton_from_intersection_v_v') :-
-  %findall(
-    %Intersection,
-    %terms_singleton_from_intersection(variable(X), variable(_), Intersection),
-    %Ans),
-  %Ans = [singleton(variable(X)), empty].
-
-
-% Tests for terms_singleton_to_intersection
-%test('terms_singleton_to_intersection_c_c_equal') :-
-  %terms_singleton_to_intersection(const(a), const(a), singleton(const(a))).
-
-%test('terms_singleton_to_intersection_c_c_lt') :-
-  %terms_singleton_to_intersection(const(a), const(b), singleton(const(a))).
-
-%test('terms_singleton_to_intersection_c_c_gt') :-
-  %terms_singleton_to_intersection(const(b), const(a), empty).
-
-%test('terms_singleton_to_intersection_c_v') :-
-  %findall(
-    %Intersection,
-    %terms_singleton_to_intersection(const(a), variable(_), Intersection),
-    %Ans),
-  %Ans = [singleton(const(a)), empty].
-
-%test('terms_singleton_to_intersection_v_c') :-
-  %findall(
-    %Intersection,
-    %terms_singleton_to_intersection(variable(X), const(b), Intersection),
-    %Ans),
-  %Ans = [singleton(variable(X)), empty].
-
-%test('terms_singleton_to_intersection_v_v') :-
-  %findall(
-    %Intersection,
-    %terms_singleton_to_intersection(variable(X), variable(_), Intersection),
-    %Ans),
-  %Ans = [singleton(variable(X)), empty].
-
-
-% Tests for terms_singleton_int_intersection
-% | xRy | xRz | Out
-% |  <  |     | empty
-% |  =  |     | [x]
-% |  >  |  <  | [x]
-% |  >  |  =  | [x]
-% |  >  |  >  | empty
-% |  >  |  ?  | [x] or empty
-% |  ?  |  <  | [x] or empty 
-% |  ?  |  =  | [x]
-% |  ?  |  >  | empty
-% |  ?  |  ?  | [x] or empty
-
-%test('terms_singleton_int_intersection_<') :-
-  %terms_singleton_int_intersection(const(a), [const(b), variable(_)], empty).
-
-%test('terms_singleton_int_intersection_=') :-
-  %terms_singleton_int_intersection(const(a), [const(a), variable(_)], singleton(const(a))).
-
-%test('terms_singleton_int_intersection_>_<') :-
-  %terms_singleton_int_intersection(const(b), [const(a), const(c)], singleton(const(b))).
-
-%test('terms_singleton_int_intersection_>_=') :-
-  %terms_singleton_int_intersection(const(b), [const(a), const(b)], singleton(const(b))).
-
-%test('terms_singleton_int_intersection_>_>') :-
-  %terms_singleton_int_intersection(const(c), [const(a), const(b)], empty).
-
-%test('terms_singleton_int_intersection_>_?') :-
-  %findall(
-    %Intersection,
-    %terms_singleton_int_intersection(const(b), [const(a), variable(_)], Intersection),
-    %Ans),
-  %Ans = [singleton(const(b)), empty].
-
-%test('terms_singleton_int_intersection_?_<') :-
-  %findall(
-    %Intersection,
-    %terms_singleton_int_intersection(const(a), [variable(_), const(c)], Intersection),
-    %Ans),
-  %Ans = [singleton(const(a)), empty].
-
-%test('terms_singleton_int_intersection_?_=') :-
-  %terms_singleton_int_intersection(const(b), [variable(_), const(b)], singleton(const(b))).
-  
-%test('terms_singleton_int_intersection_?_=') :-
-  %terms_singleton_int_intersection(const(b), [variable(_), const(b)], singleton(const(b))).
-
-%test('terms_singleton_int_intersection_?_>') :-
-  %terms_singleton_int_intersection(const(c), [variable(_), const(b)], empty).
-  
-%test('terms_singleton_int_intersection_?_?_cvv') :-
-  %findall(
-    %Intersection,
-    %terms_singleton_int_intersection(const(a), [variable(_), variable(_)], Intersection),
-    %Ans),
-  %Ans = [singleton(const(a)), empty].
-
-%test('terms_singleton_int_intersection_?_?_vcc') :-
-  %findall(
-    %Intersection,
-    %terms_singleton_int_intersection(variable(X), [const(b), const(c)], Intersection),
-    %Ans),
-  %Ans = [singleton(variable(X)), empty].
 
 
 % Tests for terms_dom_intersection 
@@ -3362,7 +3224,7 @@ test('terms_dom_intersection_termsfrom_singleton_c_v') :-
 
 test('terms_dom_intersection_termsfrom_singleton_v_c') :-
   findall(Intersection, 
-          terms_dom_intersection(terms_from(variable(_)), singleton(variable(2)), Intersection),
+          terms_dom_intersection(terms_from(variable(_)), singleton(const(2)), Intersection),
           Ans),
   Ans = [singleton(const(2)), empty].
 
@@ -3372,15 +3234,15 @@ test('terms_dom_intersection_termsfrom_singleton_v_v') :-
           Ans),
   Ans = [singleton(variable(Y)), empty].
 
-test('terms_dom_intersection_termsfrom_termsfrom', [nondet]) :-
+test('terms_dom_intersection_termsfrom_termsfrom', [ nondet ]) :-
   terms_dom_intersection(terms_from(variable(X)), terms_from(variable(Y)), Intersection),
   terms_intersection(terms_from(variable(X)), terms_from(variable(Y)), Intersection).
 
-test('terms_dom_intersection_termsfrom_termsto', [nondet]) :-
+test('terms_dom_intersection_termsfrom_termsto', [ nondet ]) :-
   terms_dom_intersection(terms_from(variable(X)), terms_to(variable(Y)), Intersection),
   terms_intersection(terms_from(variable(X)), terms_to(variable(Y)), Intersection).
 
-test('terms_dom_intersection_termsfrom_int', [nondet]) :-
+test('terms_dom_intersection_termsfrom_int', [ nondet ]) :-
   terms_dom_intersection(terms_from(variable(X)), [variable(Y),variable(Z)], Intersection),
   terms_intersection(terms_from(variable(X)), [variable(Y),variable(Z)], Intersection).
 
@@ -3408,15 +3270,15 @@ test('terms_dom_intersection_termsto_singleton_v_v') :-
           Ans),
   Ans = [singleton(variable(Y)), empty].
 
-test('terms_dom_intersection_termsto_termsfrom', [nondet]) :-
+test('terms_dom_intersection_termsto_termsfrom', [ nondet ]) :-
   terms_dom_intersection(terms_to(variable(X)), terms_from(variable(Y)), Intersection),
   terms_intersection(terms_to(variable(X)), terms_from(variable(Y)), Intersection).
 
-test('terms_dom_intersection_termsto_termsto', [nondet]) :-
+test('terms_dom_intersection_termsto_termsto', [ nondet ]) :-
   terms_dom_intersection(terms_to(variable(X)), terms_to(variable(Y)), Intersection),
   terms_intersection(terms_to(variable(X)), terms_to(variable(Y)), Intersection).
 
-test('terms_dom_intersection_termsto_int', [nondet]) :-
+test('terms_dom_intersection_termsto_int', [ nondet ]) :-
   terms_dom_intersection(terms_to(variable(X)), [variable(Y),variable(Z)], Intersection),
   terms_intersection(terms_to(variable(X)), [variable(Y),variable(Z)], Intersection).
 
@@ -3468,20 +3330,121 @@ test('terms_dom_intersection_int_singleton_[v,v]_v') :-
           Ans),
   Ans = [singleton(variable(Z)), empty].
 
-test('terms_dom_intersection_int_termsfrom', [nondet]) :-
+test('terms_dom_intersection_int_termsfrom', [ nondet ]) :-
   terms_dom_intersection([variable(X),variable(Y)], terms_from(variable(Z)), Intersection),
   terms_intersection(terms_from(variable(Z)), [variable(X),variable(Y)], Intersection).
 
-test('terms_dom_intersection_int_termsto', [nondet]) :-
+test('terms_dom_intersection_int_termsto', [ nondet ]) :-
   terms_dom_intersection([variable(X),variable(Y)], terms_to(variable(Z)), Intersection),
   terms_intersection(terms_to(variable(Z)), [variable(X),variable(Y)], Intersection). 
 
-test('terms_dom_intersection_int_int', [nondet]) :-
+test('terms_dom_intersection_int_int', [ nondet ]) :-
   terms_dom_intersection([variable(X),variable(Y)], [variable(Z),variable(W)], Intersection),
   terms_intersection([variable(X),variable(Y)], [variable(Z),variable(W)], Intersection).
 
-% TODO: terms_dom_intersection_singleton_ cases
+test('terms_dom_intersection_singleton_allterms') :-
+  terms_dom_intersection(singleton(X), all_terms, singleton(X)).
 
+test('terms_dom_intersection_singleton_singleton_c_c') :-
+  terms_dom_intersection(singleton(const(1)), singleton(const(1)), singleton(const(1))).
+
+test('terms_dom_intersection_singleton_singleton_c_v') :-
+  findall(Intersection,
+          terms_dom_intersection(singleton(const(1)), singleton(variable(_)), Intersection),
+          Ans),
+  Ans = [singleton(const(1)), empty].
+
+test('terms_dom_intersection_singleton_singleton_c_v_unifies', [ nondet ]) :-
+  terms_dom_intersection(singleton(const(1)), singleton(variable(Y)), singleton(const(1))),
+  Y == 1.
+
+test('terms_dom_intersection_singleton_singleton_v_c') :-
+  findall(Intersection,
+          terms_dom_intersection(singleton(variable(_)), singleton(const(1)), Intersection),
+          Ans),
+  Ans = [singleton(const(1)), empty].
+
+test('terms_dom_intersection_singleton_singleton_v_c_unifies', [ nondet ]) :-
+  terms_dom_intersection(singleton(variable(X)), singleton(const(1)), singleton(const(1))),
+  X == 1.
+
+test('terms_dom_intersection_singleton_singleton_v_v') :-
+  findall(Intersection,
+          terms_dom_intersection(singleton(variable(X)), singleton(variable(_)), Intersection),
+          Ans),
+  Ans = [singleton(variable(X)), empty].
+
+test('terms_dom_intersection_singleton_singleton_v_v_unifies', [ nondet ]) :-
+  terms_dom_intersection(singleton(variable(X)), singleton(variable(Y)), singleton(variable(X))),
+  X == Y.
+
+test('terms_dom_intersection_singleton_termsfrom_c_c') :-
+  terms_dom_intersection(singleton(const(2)), terms_from(const(1)), Intersection),
+  terms_dom_intersection(terms_from(const(1)), singleton(const(2)), Intersection).
+
+test('terms_dom_intersection_singleton_termsfrom_c_v', [ nondet ]) :-
+  terms_dom_intersection(singleton(const(2)), terms_from(variable(Y)), Intersection),
+  terms_dom_intersection(terms_from(variable(Y)), singleton(const(2)), Intersection).
+
+test('terms_dom_intersection_singleton_termsfrom_v_c', [ nondet ]) :-
+  terms_dom_intersection(singleton(variable(X)), terms_from(const(1)), Intersection),
+  terms_dom_intersection(terms_from(const(1)), singleton(variable(X)), Intersection).
+
+test('terms_dom_intersection_singleton_termsfrom_v_v', [ nondet ]) :-
+  terms_dom_intersection(singleton(variable(X)), terms_from(variable(Y)), Intersection),
+  terms_dom_intersection(terms_from(variable(Y)), singleton(variable(X)), Intersection).
+
+test('terms_dom_intersection_singleton_termsto_c_c') :-
+  terms_dom_intersection(singleton(const(1)), terms_to(const(2)), Intersection),
+  terms_dom_intersection(terms_to(const(2)), singleton(const(1)), Intersection).
+
+test('terms_dom_intersection_singleton_termsto_c_v', [ nondet ]) :-
+  terms_dom_intersection(singleton(const(1)), terms_to(variable(Y)), Intersection),
+  terms_dom_intersection(terms_to(variable(Y)), singleton(const(1)), Intersection).
+
+test('terms_dom_intersection_singleton_termsto_v_c', [ nondet ]) :-
+  terms_dom_intersection(singleton(variable(X)), terms_to(const(2)), Intersection),
+  terms_dom_intersection(terms_to(const(2)), singleton(variable(X)), Intersection).
+
+test('terms_dom_intersection_singleton_termsto_v_v', [ nondet ]) :-
+  terms_dom_intersection(singleton(variable(X)), terms_to(variable(Y)), Intersection),
+  terms_dom_intersection(terms_to(variable(Y)), singleton(variable(X)), Intersection).
+
+test('terms_dom_intersection_singleton_int_c_[c,c]') :-
+  terms_dom_intersection(singleton(const(2)), [const(1), const(3)], Intersection), 
+  terms_dom_intersection([const(1), const(3)], singleton(const(2)), Intersection). 
+
+test('terms_dom_intersection_singleton_int_c_[c,v]', [ nondet ]) :-
+  terms_dom_intersection(singleton(const(2)), [const(1), variable(Z)], Intersection), 
+  terms_dom_intersection([const(1), variable(Z)], singleton(const(2)), Intersection). 
+
+test('terms_dom_intersection_singleton_int_c_[v,c]', [ nondet ]) :-
+  terms_dom_intersection(singleton(const(2)), [variable(Y), const(3)], Intersection), 
+  terms_dom_intersection([variable(Y), const(3)], singleton(const(2)), Intersection). 
+
+test('terms_dom_intersection_singleton_int_c_[v,v]', [ nondet ]) :-
+  terms_dom_intersection(singleton(const(2)), [variable(Y), variable(Z)], Intersection), 
+  terms_dom_intersection([variable(Y), variable(Z)], singleton(const(2)), Intersection). 
+
+test('terms_dom_intersection_singleton_int_v_[c,c]', [ nondet ]) :-
+  terms_dom_intersection(singleton(variable(X)), [const(1), const(3)], Intersection), 
+  terms_dom_intersection([const(1), const(3)], singleton(variable(X)), Intersection). 
+
+test('terms_dom_intersection_singleton_int_v_[c,v]', [ nondet ]) :-
+  terms_dom_intersection(singleton(variable(X)), [const(1), variable(Z)], Intersection), 
+  terms_dom_intersection([const(1), variable(Z)], singleton(variable(X)), Intersection). 
+
+test('terms_dom_intersection_singleton_int_v_[v,c]', [ nondet ]) :-
+  terms_dom_intersection(singleton(variable(X)), [variable(Y), const(3)], Intersection), 
+  terms_dom_intersection([variable(Y), const(3)], singleton(variable(X)), Intersection). 
+
+test('terms_dom_intersection_singleton_int_v_[v,v]', [ nondet ]) :-
+  terms_dom_intersection(singleton(variable(X)), [variable(Y), variable(Z)], Intersection), 
+  terms_dom_intersection([variable(Y), variable(Z)], singleton(variable(X)), Intersection). 
+
+test('terms_dom_intersection_normalizes_allterms_singleton') :-
+  X = 42,
+  terms_dom_intersection(all_terms, singleton(variable(X)), singleton(const(42))).
 
 test('terms_dom_intersection_normalizes_allterms_termsfrom') :-
   X = 42, 
@@ -3499,11 +3462,15 @@ test('terms_dom_intersection_normalizes_termsfrom_allterms') :-
   X = 42, 
   terms_dom_intersection(terms_from(variable(X)), all_terms, terms_from(const(X))). 
 
-test('terms_dom_intersection_normalizes_termsfrom_termsfrom', [nondet]) :-
+test('terms_dom_intersection_normalizes_termsfrom_singleton') :-
+  X = 42, Y = 43,
+  terms_dom_intersection(terms_from(variable(X)), singleton(variable(Y)), singleton(const(Y))).
+
+test('terms_dom_intersection_normalizes_termsfrom_termsfrom', [ nondet ]) :-
   X = 42, Y = 43, 
   terms_dom_intersection(terms_from(variable(X)), terms_from(variable(Y)), terms_from(const(Y))). 
 
-test('terms_dom_intersection_normalizes_termsfrom_termsto', [nondet]) :-
+test('terms_dom_intersection_normalizes_termsfrom_termsto', [ nondet ]) :-
   X = 42, Y = 43, 
   terms_dom_intersection(terms_from(variable(X)), terms_to(variable(Y)), [const(X), const(Y)]). 
 
@@ -3515,11 +3482,15 @@ test('terms_dom_intersection_normalizes_termsto_allterms') :-
   X = 42, 
   terms_dom_intersection(terms_to(variable(X)), all_terms, terms_to(const(X))). 
 
-test('terms_dom_intersection_normalizes_termsto_termsfrom', [nondet]) :-
+test('terms_dom_intersection_normalizes_termsto_singleton') :-
+  X = 43, Y = 42,
+  terms_dom_intersection(terms_to(variable(X)), singleton(variable(Y)), singleton(const(Y))).
+
+test('terms_dom_intersection_normalizes_termsto_termsfrom', [ nondet ]) :-
   X = 43, Y = 42, 
   terms_dom_intersection(terms_to(variable(X)), terms_from(variable(Y)), [const(Y), const(X)]). 
 
-test('terms_dom_intersection_normalizes_termsto_termsto', [nondet]) :-
+test('terms_dom_intersection_normalizes_termsto_termsto', [ nondet ]) :-
   X = 42, Y = 43, 
   terms_dom_intersection(terms_to(variable(X)), terms_to(variable(Y)), terms_to(const(X))). 
 
@@ -3531,11 +3502,15 @@ test('terms_dom_intersection_normalizes_int_allterms') :-
   X = 42, Y = 43, 
   terms_dom_intersection([variable(X), variable(Y)], all_terms, [const(X), const(Y)]). 
 
-test('terms_dom_intersection_normalizes_int_termsfrom', [nondet]) :-
+test('terms_dom_intersection_normalizes_int_singleton') :-
+  X = 41, Y = 43, Z = 42,
+  terms_dom_intersection([variable(X), variable(Y)], singleton(variable(Z)), singleton(const(Z))).
+
+test('terms_dom_intersection_normalizes_int_termsfrom', [ nondet ]) :-
   X = 42, Y = 43, Z = 41, 
   terms_dom_intersection([variable(X), variable(Y)], terms_from(variable(Z)), [const(X), const(Y)]). 
 
-test('terms_dom_intersection_normalizes_int_termsto', [nondet]) :-
+test('terms_dom_intersection_normalizes_int_termsto', [ nondet ]) :-
   X = 42, Y = 43, Z = 44, 
   terms_dom_intersection([variable(X), variable(Y)], terms_to(variable(Z)), [const(X), const(Y)]). 
 
@@ -3543,9 +3518,28 @@ test('terms_dom_intersection_normalizes_int_int') :-
   X = 42, Y = 44, Z = 43, W = 45,
   terms_dom_intersection([variable(X), variable(Y)], [variable(Z), variable(W)], [const(Z), const(Y)]). 
 
+test('terms_dom_intersection_normalizes_singleton_allterms') :-
+  X = 42,
+  terms_dom_intersection(singleton(variable(X)), all_terms, singleton(const(X))).
+
+test('terms_dom_intersection_normalizes_singleton_singleton') :-
+  X = 42, Y = 42,
+  terms_dom_intersection(singleton(variable(X)), singleton(variable(Y)), singleton(const(X))).
+
+test('terms_dom_intersection_normalizes_singleton_termsfrom') :-
+  X = 42, Y = 41,
+  terms_dom_intersection(singleton(variable(X)), terms_from(variable(Y)), singleton(const(X))).
+
+test('terms_dom_intersection_normalizes_singleton_termsto') :-
+  X = 42, Y = 43,
+  terms_dom_intersection(singleton(variable(X)), terms_to(variable(Y)), singleton(const(X))).
+
+test('terms_dom_intersection_normalizes_singleton_int') :-
+  X = 42, Y = 41, Z = 43,
+  terms_dom_intersection(singleton(variable(X)), [variable(Y), variable(Z)], singleton(const(X))).
+
 
 % Tests for the unification hook
-
 test('unify_empty_intersection_fails_to_unify', [ fail ]) :-
   term_at_least(X, 2),
   term_at_most(Y, 1),
@@ -3898,8 +3892,156 @@ test('unify_termsto_int_v_[v,v]', [ nondet ]) :-
   X = Y,
   terms_intersection(Dom1, Dom2, NewDom), get_attr(Y, term_order, NewDom). 
 
-% interval domains with variable endpoints can collapse to singletons
-% this means that terms_dom_intersection must handle these properly
+test('unify_int_allterms_[c,c]', [ nondet ]) :-
+  term_at_least(X, 1), term_at_most(X, 3),
+  is_term(Y),
+  X = Y,
+  get_attr(Y, term_order, [const(1), const(3)]).
+
+test('unify_int_allterms_[c,v]', [ nondet ]) :-
+  term_at_least(X, 1), term_at_most(X, Z),
+  is_term(Y),
+  X = Y,
+  get_attr(Y, term_order, [const(1), variable(Z)]).
+
+test('unify_int_allterms_[v,c]', [ nondet ]) :-
+  term_at_least(X, Z), term_at_most(X, 3),
+  is_term(Y),
+  X = Y,
+  get_attr(Y, term_order, [variable(Z), const(3)]).
+
+test('unify_int_allterms_[v,v]', [ nondet ]) :-
+  term_at_least(X, Z1), term_at_most(X, Z2),
+  is_term(Y),
+  X = Y,
+  get_attr(Y, term_order, [variable(Z1), variable(Z2)]).
+
+test('unify_int_termsfrom_[c,c]_c', [ nondet ]) :-
+  term_at_least(X, 1), term_at_most(X, 3),
+  term_at_least(Y, 2),
+  X = Y,
+  get_attr(Y, term_order, [const(2), const(3)]).
+
+test('unify_int_termsfrom_[c,c]_v', [ nondet ]) :-
+  term_at_least(X, 1), term_at_most(X, 3),
+  term_at_least(Y, _),
+  get_attr(X, term_order, Dom1),
+  get_attr(Y, term_order, Dom2),
+  X = Y,
+  terms_intersection(Dom1, Dom2, NewDom), get_attr(Y, term_order, NewDom).
+
+test('unify_int_termsfrom_[c,v]_c', [ nondet ]) :-
+  term_at_least(X, 1), term_at_most(X, _),
+  term_at_least(Y, 2),
+  get_attr(X, term_order, Dom1),
+  get_attr(Y, term_order, Dom2),
+  X = Y,
+  terms_intersection(Dom1, Dom2, NewDom), get_attr(Y, term_order, NewDom).
+
+test('unify_int_termsfrom_[c,v]_v', [ nondet ]) :-
+  term_at_least(X, 1), term_at_most(X, _),
+  term_at_least(Y, _),
+  get_attr(X, term_order, Dom1),
+  get_attr(Y, term_order, Dom2),
+  X = Y,
+  terms_intersection(Dom1, Dom2, NewDom), get_attr(Y, term_order, NewDom).
+
+test('unify_int_termsfrom_[v,c]_c', [ nondet ]) :-
+  term_at_least(X, _), term_at_most(X, 3),
+  term_at_least(Y, 2),
+  get_attr(X, term_order, Dom1),
+  get_attr(Y, term_order, Dom2),
+  X = Y,
+  terms_intersection(Dom1, Dom2, NewDom), get_attr(Y, term_order, NewDom).
+
+test('unify_int_termsfrom_[v,c]_v', [ nondet ]) :-
+  term_at_least(X, _), term_at_most(X, 3),
+  term_at_least(Y, _),
+  get_attr(X, term_order, Dom1),
+  get_attr(Y, term_order, Dom2),
+  X = Y,
+  terms_intersection(Dom1, Dom2, NewDom), get_attr(Y, term_order, NewDom).
+
+test('unify_int_termsfrom_[v,v]_c', [ nondet ]) :-
+  term_at_least(X, _), term_at_most(X, _),
+  term_at_least(Y, 2),
+  get_attr(X, term_order, Dom1),
+  get_attr(Y, term_order, Dom2),
+  X = Y,
+  terms_intersection(Dom1, Dom2, NewDom), get_attr(Y, term_order, NewDom).
+
+test('unify_int_termsfrom_[v,v]_v', [ nondet ]) :-
+  term_at_least(X, _), term_at_most(X, _),
+  term_at_least(Y, _),
+  get_attr(X, term_order, Dom1),
+  get_attr(Y, term_order, Dom2),
+  X = Y,
+  terms_intersection(Dom1, Dom2, NewDom), get_attr(Y, term_order, NewDom).
+
+test('unify_int_termsto_[c,c]_c', [ nondet ]) :-
+  term_at_least(X, 1), term_at_most(X, 3),
+  term_at_most(Y, 2),
+  X = Y,
+  get_attr(Y, term_order, [const(1), const(2)]).
+
+test('unify_int_termsto_[c,c]_v', [ nondet ]) :-
+  term_at_least(X, 1), term_at_most(X, 3),
+  term_at_most(Y, _),
+  get_attr(X, term_order, Dom1),
+  get_attr(Y, term_order, Dom2),
+  X = Y,
+  terms_intersection(Dom1, Dom2, NewDom), get_attr(Y, term_order, NewDom).
+
+test('unify_int_termsto_[c,v]_c', [ nondet ]) :-
+  term_at_least(X, 1), term_at_most(X, _),
+  term_at_most(Y, 2),
+  get_attr(X, term_order, Dom1),
+  get_attr(Y, term_order, Dom2),
+  X = Y,
+  terms_intersection(Dom1, Dom2, NewDom), get_attr(Y, term_order, NewDom).
+
+test('unify_int_termsto_[c,v]_v', [ nondet ]) :-
+  term_at_least(X, 1), term_at_most(X, _),
+  term_at_most(Y, _),
+  get_attr(X, term_order, Dom1),
+  get_attr(Y, term_order, Dom2),
+  X = Y,
+  terms_intersection(Dom1, Dom2, NewDom), get_attr(Y, term_order, NewDom).
+
+test('unify_int_termsto_[v,c]_c', [ nondet ]) :-
+  term_at_least(X, _), term_at_most(X, 3),
+  term_at_most(Y, 2),
+  get_attr(X, term_order, Dom1),
+  get_attr(Y, term_order, Dom2),
+  X = Y,
+  terms_intersection(Dom1, Dom2, NewDom), get_attr(Y, term_order, NewDom).
+
+test('unify_int_termsto_[v,c]_v', [ nondet ]) :-
+  term_at_least(X, _), term_at_most(X, 3),
+  term_at_most(Y, _),
+  get_attr(X, term_order, Dom1),
+  get_attr(Y, term_order, Dom2),
+  X = Y,
+  terms_intersection(Dom1, Dom2, NewDom), get_attr(Y, term_order, NewDom).
+
+test('unify_int_termsto_[v,v]_c', [ nondet ]) :-
+  term_at_least(X, _), term_at_most(X, _),
+  term_at_most(Y, 2),
+  get_attr(X, term_order, Dom1),
+  get_attr(Y, term_order, Dom2),
+  X = Y,
+  terms_intersection(Dom1, Dom2, NewDom), get_attr(Y, term_order, NewDom).
+
+test('unify_int_termsto_[v,v]_v', [ nondet ]) :-
+  term_at_least(X, _), term_at_most(X, _),
+  term_at_most(Y, _),
+  get_attr(X, term_order, Dom1),
+  get_attr(Y, term_order, Dom2),
+  X = Y,
+  terms_intersection(Dom1, Dom2, NewDom), get_attr(Y, term_order, NewDom).
+
+% Next: int-int
+% Then: singleton stuff
 
 
 :- end_tests(reif_utils).
