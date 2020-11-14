@@ -394,6 +394,8 @@ term_normalized(Term0, Term) :-
 dom_normalized(Dom0, Dom) :-
   (  Dom0 = all_terms 
   -> Dom  = Dom0
+  ;  Dom0 = empty
+  -> Dom  = Dom0
   ;  Dom0 = terms_from(Term0)
   -> term_normalized(Term0, Term),
      Dom  = terms_from(Term)
@@ -453,9 +455,9 @@ terms_intersection(terms_from(X), terms_to(Y), Intersection) :-
      ;  Intersection = empty
      )
   ;  (  X = const(X1)
-     -> ( arg(1, Y, Y1), Y1 = X1, Intersection = singleton(X) )
+     -> arg(1, Y, Y1), Y1 = X1, Intersection = singleton(X) 
      ;  X = variable(X1)
-     -> ( arg(1, Y, Y1), X1 = Y1, Intersection = singleton(Y) )
+     -> arg(1, Y, Y1), X1 = Y1, Intersection = singleton(Y) 
      )
   ;  Intersection = [X, Y]
   ;  Intersection = empty
@@ -506,10 +508,10 @@ terms_from_int_lookup(>>, _, _, _, [empty]).
 terms_intersection(terms_from(X), [Y, Z], Intersection) :-
   terms_orderKey(X, Y, Z, OrderKey),
   terms_from_int_lookup(OrderKey, X, Y, Z, Intersections),
-  member(Intersection0, Intersections),
-  (  member(OrderKey, [??, >?]), Intersection0 = singleton(Z)
-  -> arg(1, X, X1), arg(1, Z, Z1), X1 = Z1, dom_normalized(Intersection0, Intersection)
-  ;  Intersection = Intersection0
+  member(Intersection1, Intersections),
+  (  Intersection1 = singleton(Z)
+  -> arg(1, X, X1), arg(1, Z, Z1), X1 = Z1, dom_normalized(Intersection1, Intersection)
+  ;  Intersection = Intersection1 
   ).
 
 % terms_intersection([+X, +Y], terms_from(+Z), -Intersection) is multi.
@@ -616,10 +618,13 @@ terms_intersection([X, Y], [Z, W], Intersection) :-
      -> arg(1, Y, Y1), arg(1, Z, Z1), Y1 = Z1, dom_normalized(Intersection0, Intersection)
      ;  member(OrderKey, [??>>, ???>]), Intersection0 = singleton(W)
      -> arg(1, X, X1), arg(1, W, W1), X1 = W1, dom_normalized(Intersection0, Intersection)
-     ;  OrderKey = ????, Intersection0 = singleton(X), dif(X, Y)
-     -> arg(1, X, X1), arg(1, W, W1), X1 = W1, dom_normalized(Intersection0, Intersection)
-     ;  OrderKey = ????, Intersection0 = singleton(Y)
-     -> arg(1, Y, Y1), arg(1, Z, Z1), Y1 = Z1, dom_normalized(Intersection0, Intersection)
+     ;  OrderKey = ????, dif(X,Y)
+     -> (  Intersection0 = singleton(X)
+        -> arg(1, X, X1), arg(1, W, W1), X1 = W1, dom_normalized(Intersection0, Intersection)
+        ;  Intersection0 = singleton(Y) 
+        -> arg(1, Y, Y1), arg(1, Z, Z1), Y1 = Z1, dom_normalized(Intersection0, Intersection)
+        ;  Intersection = Intersection0
+        ) 
      ;  Intersection = Intersection0
      )
   ).
