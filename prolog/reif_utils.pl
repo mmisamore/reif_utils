@@ -508,10 +508,10 @@ terms_from_int_lookup(>>, _, _, _, [empty]).
 terms_intersection(terms_from(X), [Y, Z], Intersection) :-
   terms_orderKey(X, Y, Z, OrderKey),
   terms_from_int_lookup(OrderKey, X, Y, Z, Intersections),
-  member(Intersection1, Intersections),
-  (  Intersection1 = singleton(Z)
-  -> arg(1, X, X1), arg(1, Z, Z1), X1 = Z1, dom_normalized(Intersection1, Intersection)
-  ;  Intersection = Intersection1 
+  member(Intersection0, Intersections),
+  (  Intersection0 = singleton(Z)
+  -> arg(1, X, X1), arg(1, Z, Z1), X1 = Z1, dom_normalized(Intersection0, Intersection)
+  ;  Intersection = Intersection0 
   ).
 
 % terms_intersection([+X, +Y], terms_from(+Z), -Intersection) is multi.
@@ -668,7 +668,7 @@ terms_dom_intersection(Dom1, Dom2, Intersection) :-
         ; Intersection = empty 
         )
      ;  X = variable(X1), Y = variable(Y1)
-     -> (  Intersection = singleton(X1), X1 = Y1 
+     -> (  Intersection = singleton(X), X1 = Y1 
         ;  Intersection = empty 
         )
      )
