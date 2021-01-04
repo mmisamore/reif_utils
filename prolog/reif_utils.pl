@@ -529,6 +529,7 @@ terms_to_int_lookup(?>, _, Y, Z, [[Y,Z]]).
 terms_to_int_lookup(<?, _, _, _, [empty]).
 terms_to_int_lookup(<<, _, _, _, [empty]).
 terms_to_int_lookup(=<, _, Y, _, [singleton(Y)]).
+terms_to_int_lookup(=?, _, Y, _, [singleton(Y)]).
 terms_to_int_lookup(>?, X, Y, Z, [[Y,X], [Y,Z]]).
 terms_to_int_lookup(><, X, Y, _, [[Y,X]]).
 terms_to_int_lookup(>=, _, Y, Z, [[Y,Z]]).
